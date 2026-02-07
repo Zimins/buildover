@@ -39,6 +39,10 @@ export function createDevCommand(): Command {
           } else {
             targetUrl = 'http://localhost:3000'; // Default fallback
           }
+        } else if (/^\d+$/.test(targetUrl)) {
+          targetUrl = `http://localhost:${targetUrl}`;
+        } else if (!targetUrl.startsWith('http')) {
+          targetUrl = `http://${targetUrl}`;
         }
 
         // Parse server port

@@ -46,6 +46,7 @@ export class ClaudeAgent extends EventEmitter {
         message,
         '--output-format',
         'stream-json',
+        '--verbose',
         '--allowedTools',
         'Read,Edit,Write,Glob,Grep',
       ],
@@ -54,6 +55,9 @@ export class ClaudeAgent extends EventEmitter {
         stdio: ['pipe', 'pipe', 'pipe'],
       }
     );
+
+    // Close stdin immediately - claude CLI waits for stdin EOF before producing output
+    this.currentProcess.stdin?.end();
 
     let buffer = '';
 
@@ -104,29 +108,41 @@ export class ClaudeAgent extends EventEmitter {
   }
 
   private handleStreamEvent(event: any): void {
-    if (event.type === 'text') {
-      const response: AgentResponse = {
-        type: 'text',
-        content: event.text || '',
-      };
-      this.emit('response', response);
-    } else if (event.type === 'tool_use') {
-      const response: AgentResponse = {
-        type: 'tool_use',
-        content: `Using tool: ${event.name}`,
-        toolUse: {
-          name: event.name,
-          input: event.input || {},
-        },
-      };
-      this.emit('response', response);
+    if (event.type === 'assistant' && event.message?.content) {
+      for (const block of event.message.content) {
+        if (block.type === 'text') {
+          const response: AgentResponse = {
+            type: 'text',
+            content: block.text || '',
+          };
+          this.emit('response', response);
+        } else if (block.type === 'tool_use') {
+          const response: AgentResponse = {
+            type: 'tool_use',
+            content: `Using tool: ${block.name}`,
+            toolUse: {
+              name: block.name,
+              input: block.input || {},
+            },
+          };
+          this.emit('response', response);
 
-      if (event.name === 'Edit' || event.name === 'Write') {
-        const change: FileChange = {
-          path: event.input?.file_path || 'unknown',
-          type: event.name === 'Write' ? 'added' : 'modified',
+          if (block.name === 'Edit' || block.name === 'Write') {
+            const change: FileChange = {
+              path: block.input?.file_path || 'unknown',
+              type: block.name === 'Write' ? 'added' : 'modified',
+            };
+            this.emit('file_change', change);
+          }
+        }
+      }
+    } else if (event.type === 'result') {
+      if (event.is_error) {
+        const response: AgentResponse = {
+          type: 'error',
+          content: event.result || 'Agent execution failed',
         };
-        this.emit('file_change', change);
+        this.emit('response', response);
       }
     }
   }
