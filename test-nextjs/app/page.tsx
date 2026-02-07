@@ -1,3 +1,5 @@
+'use client';
+
 import Image from "next/image";
 
 export default function Home() {
@@ -58,6 +60,12 @@ export default function Home() {
           >
             Documentation
           </a>
+          <button
+            className="flex h-12 w-full items-center justify-center rounded-full border-2 border-solid border-blue-500 px-5 text-blue-500 transition-colors hover:bg-blue-500 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-black md:w-[158px]"
+            onClick={() => alert('Button clicked!')}
+          >
+            Click Me
+          </button>
         </div>
       </main>
     </div>
