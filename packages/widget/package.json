@@ -1,0 +1,20 @@
+{
+  "name": "@buildover/widget",
+  "version": "0.0.1",
+  "description": "BuildOver chat widget for displaying AI assistant chat",
+  "type": "module",
+  "main": "./dist/widget.js",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["buildover", "widget", "chat"],
+  "dependencies": {
+    "preact": "^10.24.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "tsup": "^8.3.5"
+  }
+}
