@@ -49,6 +49,8 @@ export class ClaudeAgent extends EventEmitter {
         '--verbose',
         '--allowedTools',
         'Read,Edit,Write,Glob,Grep',
+        '--permission-mode',
+        'bypassPermissions',
       ],
       {
         cwd: this.projectRoot,

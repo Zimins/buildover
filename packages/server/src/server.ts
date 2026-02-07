@@ -6,7 +6,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { createRequire } from 'module';
 import chalk from 'chalk';
-import { BuildOverConfig } from './types.js';
+import { BuildOverConfig, AgentResponse, FileChange } from './types.js';
 import { createProxy } from './proxy.js';
 import { SessionManager } from './session/manager.js';
 import { GitManager } from './git/manager.js';
@@ -174,35 +174,68 @@ export class BuildOverServer {
     });
   }
 
+  private wsSend(ws: WebSocket, data: object): void {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(data));
+    }
+  }
+
   private handleChatMessage(sessionId: string, content: string, ws: WebSocket): void {
     let agent = this.agents.get(sessionId);
+    const messageId = `msg-${Date.now()}`;
 
     if (!agent) {
       agent = new ClaudeAgent(this.config.projectRoot);
 
-      agent.on('response', (response) => {
-        ws.send(JSON.stringify({
-          type: 'agent_response',
-          data: response,
-        }));
+      agent.on('response', (response: AgentResponse) => {
+        if (response.type === 'text') {
+          this.wsSend(ws, {
+            type: 'stream',
+            content: response.content,
+            messageId,
+          });
+        } else if (response.type === 'tool_use') {
+          const toolName = response.toolUse?.name || 'unknown';
+          const toolInput = response.toolUse?.input || {};
+          let statusMsg = `Using tool: ${toolName}`;
+          if (toolName === 'Read' && toolInput.file_path) {
+            statusMsg = `Reading ${toolInput.file_path.split('/').pop()}`;
+          } else if (toolName === 'Edit' && toolInput.file_path) {
+            statusMsg = `Editing ${toolInput.file_path.split('/').pop()}`;
+          } else if (toolName === 'Write' && toolInput.file_path) {
+            statusMsg = `Creating ${toolInput.file_path.split('/').pop()}`;
+          } else if (toolName === 'Glob') {
+            statusMsg = `Searching files: ${toolInput.pattern || ''}`;
+          } else if (toolName === 'Grep') {
+            statusMsg = `Searching for: ${toolInput.pattern || ''}`;
+          }
+          this.wsSend(ws, { type: 'status', status: 'editing', message: statusMsg });
+        } else if (response.type === 'complete') {
+          this.wsSend(ws, { type: 'stream.end', messageId });
+          this.wsSend(ws, { type: 'status', status: 'done', message: 'Done' });
+        } else if (response.type === 'error') {
+          this.wsSend(ws, { type: 'error', message: response.content });
+        }
       });
 
-      agent.on('file_change', (change) => {
-        ws.send(JSON.stringify({
-          type: 'file_change',
-          data: change,
-        }));
+      agent.on('file_change', (change: FileChange) => {
+        this.wsSend(ws, {
+          type: 'file.changed',
+          path: change.path,
+          additions: 0,
+          deletions: 0,
+        });
       });
 
-      agent.on('error', (error) => {
-        ws.send(JSON.stringify({
-          type: 'error',
-          data: { message: error },
-        }));
+      agent.on('error', (error: string) => {
+        this.wsSend(ws, { type: 'error', message: error });
       });
 
       this.agents.set(sessionId, agent);
     }
+
+    // Send initial status
+    this.wsSend(ws, { type: 'status', status: 'analyzing', message: 'AI is analyzing your request...' });
 
     agent.sendMessage(content);
   }
