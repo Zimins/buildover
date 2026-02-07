@@ -128,63 +128,86 @@ export class BuildOverServer {
   private setupWebSocket(): void {
     this.server.on('upgrade', (request, socket, head) => {
       const pathname = new URL(request.url || '', 'http://localhost').pathname;
+      console.log(chalk.magenta(`[WS] Upgrade request: ${pathname}`));
 
       if (pathname === '/buildover/ws') {
+        console.log(chalk.magenta('[WS] Handling BuildOver WebSocket upgrade'));
         this.wss.handleUpgrade(request, socket, head, (ws) => {
           this.wss.emit('connection', ws, request);
         });
+      } else {
+        console.log(chalk.gray(`[WS] Ignoring upgrade for: ${pathname} (not /buildover/ws)`));
       }
     });
 
     this.wss.on('connection', (ws: WebSocket) => {
-      console.log(chalk.green('Client connected to WebSocket'));
+      console.log(chalk.green('[WS] Client connected to /buildover/ws'));
 
       let sessionId: string | null = null;
 
       ws.on('message', async (data) => {
+        const raw = data.toString();
+        console.log(chalk.magenta(`[WS] Received message: ${raw.substring(0, 200)}`));
+
         try {
-          const message = JSON.parse(data.toString());
+          const message = JSON.parse(raw);
+          console.log(chalk.magenta(`[WS] Message type: ${message.type}`));
 
           if (message.type === 'init') {
             sessionId = message.sessionId;
-            console.log(chalk.blue(`Session initialized: ${sessionId}`));
+            console.log(chalk.blue(`[WS] Session initialized: ${sessionId}`));
           } else if (message.type === 'chat') {
-            // Auto-create session if not initialized
             if (!sessionId) {
               sessionId = `session-${Date.now()}`;
-              console.log(chalk.blue(`Auto-created session: ${sessionId}`));
+              console.log(chalk.blue(`[WS] Auto-created session: ${sessionId}`));
             }
+            console.log(chalk.blue(`[WS] Chat message: "${message.content.substring(0, 100)}"`));
+            console.log(chalk.blue(`[WS] WebSocket readyState: ${ws.readyState} (1=OPEN)`));
             this.handleChatMessage(sessionId, message.content, ws);
+          } else {
+            console.log(chalk.yellow(`[WS] Unknown message type: ${message.type}`));
           }
         } catch (error) {
-          console.error(chalk.red('WebSocket message error:'), error);
+          console.error(chalk.red('[WS] Failed to parse message:'), error);
         }
       });
 
-      ws.on('close', () => {
-        console.log(chalk.yellow('Client disconnected'));
+      ws.on('close', (code, reason) => {
+        console.log(chalk.yellow(`[WS] Client disconnected, code=${code}, reason=${reason || 'none'}`));
         if (sessionId) {
           const agent = this.agents.get(sessionId);
           if (agent) {
+            console.log(chalk.yellow(`[WS] Stopping agent for session: ${sessionId}`));
             agent.stop();
             this.agents.delete(sessionId);
           }
         }
+      });
+
+      ws.on('error', (error) => {
+        console.error(chalk.red(`[WS] WebSocket error:`), error.message);
       });
     });
   }
 
   private wsSend(ws: WebSocket, data: object): void {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(data));
+      const json = JSON.stringify(data);
+      console.log(chalk.gray(`[WS] Sending → ${json.substring(0, 150)}${json.length > 150 ? '...' : ''}`));
+      ws.send(json);
+    } else {
+      console.warn(chalk.yellow(`[WS] Cannot send, readyState=${ws.readyState} (1=OPEN, 2=CLOSING, 3=CLOSED)`));
     }
   }
 
   private handleChatMessage(sessionId: string, content: string, ws: WebSocket): void {
     let agent = this.agents.get(sessionId);
     const messageId = `msg-${Date.now()}`;
+    console.log(chalk.blue(`[Chat] handleChatMessage called, sessionId=${sessionId}, messageId=${messageId}`));
+    console.log(chalk.blue(`[Chat] Existing agent: ${agent ? 'yes' : 'no'}, agents count: ${this.agents.size}`));
 
     if (!agent) {
+      console.log(chalk.blue(`[Chat] Creating new ClaudeAgent for session: ${sessionId}`));
       agent = new ClaudeAgent(this.config.projectRoot);
 
       agent.on('response', (response: AgentResponse) => {

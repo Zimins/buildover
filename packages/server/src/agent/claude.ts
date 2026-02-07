@@ -33,38 +33,53 @@ export class ClaudeAgent extends EventEmitter {
 
   async sendMessage(message: string): Promise<void> {
     if (this.currentProcess) {
-      console.warn(chalk.yellow('Agent is already processing a message'));
+      console.warn(chalk.yellow('[Agent] Already processing a message, ignoring'));
       return;
     }
 
-    console.log(chalk.blue(`Starting Claude agent (${ClaudeAgent.claudePath})...`));
+    const args = [
+      '-p',
+      message,
+      '--output-format',
+      'stream-json',
+      '--verbose',
+      '--allowedTools',
+      'Read,Edit,Write,Glob,Grep',
+      '--permission-mode',
+      'bypassPermissions',
+    ];
+
+    console.log(chalk.blue(`[Agent] Starting Claude CLI: ${ClaudeAgent.claudePath}`));
+    console.log(chalk.blue(`[Agent] CWD: ${this.projectRoot}`));
+    console.log(chalk.blue(`[Agent] Args: ${args.join(' ')}`));
+    console.log(chalk.blue(`[Agent] Prompt: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"`));
 
     this.currentProcess = spawn(
       ClaudeAgent.claudePath,
-      [
-        '-p',
-        message,
-        '--output-format',
-        'stream-json',
-        '--verbose',
-        '--allowedTools',
-        'Read,Edit,Write,Glob,Grep',
-        '--permission-mode',
-        'bypassPermissions',
-      ],
+      args,
       {
         cwd: this.projectRoot,
         stdio: ['pipe', 'pipe', 'pipe'],
       }
     );
 
+    const pid = this.currentProcess.pid;
+    console.log(chalk.blue(`[Agent] Process spawned, PID: ${pid}`));
+
     // Close stdin immediately - claude CLI waits for stdin EOF before producing output
     this.currentProcess.stdin?.end();
+    console.log(chalk.blue('[Agent] stdin closed (EOF sent)'));
 
     let buffer = '';
+    let chunkCount = 0;
+    let eventCount = 0;
 
     this.currentProcess.stdout?.on('data', (chunk) => {
-      buffer += chunk.toString();
+      chunkCount++;
+      const chunkStr = chunk.toString();
+      console.log(chalk.gray(`[Agent] stdout chunk #${chunkCount} (${chunkStr.length} bytes)`));
+
+      buffer += chunkStr;
       const lines = buffer.split('\n');
 
       buffer = lines.pop() || '';
@@ -74,20 +89,23 @@ export class ClaudeAgent extends EventEmitter {
 
         try {
           const parsed = JSON.parse(line);
+          eventCount++;
+          console.log(chalk.cyan(`[Agent] Event #${eventCount}: type=${parsed.type}${parsed.type === 'assistant' ? `, blocks=${parsed.message?.content?.length || 0}` : ''}${parsed.type === 'result' ? `, is_error=${parsed.is_error}` : ''}`));
           this.handleStreamEvent(parsed);
         } catch (error) {
-          console.error(chalk.red('Failed to parse stream event:'), line);
+          console.error(chalk.red(`[Agent] Failed to parse JSON:`), line.substring(0, 200));
         }
       }
     });
 
     this.currentProcess.stderr?.on('data', (chunk) => {
-      console.error(chalk.red('Agent error:'), chunk.toString());
-      this.emit('error', chunk.toString());
+      const errStr = chunk.toString().trim();
+      console.error(chalk.red(`[Agent] stderr: ${errStr}`));
+      this.emit('error', errStr);
     });
 
     this.currentProcess.on('close', (code) => {
-      console.log(chalk.green(`Agent process exited with code ${code}`));
+      console.log(chalk.green(`[Agent] Process exited, code=${code}, events=${eventCount}, chunks=${chunkCount}`));
       this.currentProcess = null;
 
       const response: AgentResponse = {
@@ -98,7 +116,7 @@ export class ClaudeAgent extends EventEmitter {
     });
 
     this.currentProcess.on('error', (error) => {
-      console.error(chalk.red('Failed to start agent:'), error);
+      console.error(chalk.red(`[Agent] Failed to start process:`), error.message);
       this.currentProcess = null;
 
       const response: AgentResponse = {
@@ -113,12 +131,14 @@ export class ClaudeAgent extends EventEmitter {
     if (event.type === 'assistant' && event.message?.content) {
       for (const block of event.message.content) {
         if (block.type === 'text') {
+          console.log(chalk.cyan(`[Agent]   → text block (${(block.text || '').length} chars)`));
           const response: AgentResponse = {
             type: 'text',
             content: block.text || '',
           };
           this.emit('response', response);
         } else if (block.type === 'tool_use') {
+          console.log(chalk.cyan(`[Agent]   → tool_use: ${block.name}(${JSON.stringify(block.input || {}).substring(0, 100)})`));
           const response: AgentResponse = {
             type: 'tool_use',
             content: `Using tool: ${block.name}`,
@@ -136,9 +156,12 @@ export class ClaudeAgent extends EventEmitter {
             };
             this.emit('file_change', change);
           }
+        } else {
+          console.log(chalk.gray(`[Agent]   → unknown block type: ${block.type}`));
         }
       }
     } else if (event.type === 'result') {
+      console.log(chalk.cyan(`[Agent]   → result: is_error=${event.is_error}, result="${(event.result || '').substring(0, 100)}"`));
       if (event.is_error) {
         const response: AgentResponse = {
           type: 'error',
@@ -146,6 +169,8 @@ export class ClaudeAgent extends EventEmitter {
         };
         this.emit('response', response);
       }
+    } else if (event.type === 'system') {
+      console.log(chalk.gray(`[Agent]   → system event`));
     }
   }
 
