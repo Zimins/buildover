@@ -17,7 +17,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@buildover/server':
+      buildover-server:
         specifier: workspace:*
         version: link:../server
       chalk:
@@ -39,7 +39,7 @@ importers:
 
   packages/server:
     dependencies:
-      '@buildover/widget':
+      buildover-widget:
         specifier: workspace:*
         version: link:../widget
       chalk:

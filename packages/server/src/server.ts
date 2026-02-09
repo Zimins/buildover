@@ -24,9 +24,9 @@ export class BuildOverServer {
   private static resolveWidgetPath(): string {
     try {
       const require = createRequire(import.meta.url);
-      return require.resolve('@buildover/widget/dist/widget.js');
+      return require.resolve('buildover-widget/dist/widget.js');
     } catch {
-      return join(process.cwd(), 'node_modules/@buildover/widget/dist/widget.js');
+      return join(process.cwd(), 'node_modules/buildover-widget/dist/widget.js');
     }
   }
 

@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import type { BuildOverConfig } from '@buildover/server';
+import type { BuildOverConfig } from 'buildover-server';
 
 export function defineConfig(config: BuildOverConfig): BuildOverConfig {
   return config;

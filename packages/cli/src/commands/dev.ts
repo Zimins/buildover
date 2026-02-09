@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { BuildOverServer, detectPort, detectFramework } from '@buildover/server';
+import { BuildOverServer, detectPort, detectFramework } from 'buildover-server';
 import { loadConfig } from '../config.js';
 import { printBanner } from '../banner.js';
 

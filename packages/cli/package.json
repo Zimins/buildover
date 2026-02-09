@@ -1,10 +1,11 @@
 {
-  "name": "@buildover/cli",
-  "version": "0.0.1",
+  "name": "buildover",
+  "version": "0.0.2",
   "description": "BuildOver CLI for managing build overlays",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": ["dist"],
   "bin": {
     "buildover": "./dist/index.js"
   },
@@ -20,7 +21,7 @@
     "overlay"
   ],
   "dependencies": {
-    "@buildover/server": "workspace:*",
+    "buildover-server": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "dotenv": "^17.2.4"
