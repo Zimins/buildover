@@ -4,6 +4,56 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-800">
 
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes float1 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-22px) rotate(8deg); }
+        }
+        @keyframes float2 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-16px) rotate(-10deg); }
+        }
+        @keyframes float3 {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-12px) scale(1.08); }
+        }
+        @keyframes floatSlow {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-28px) rotate(5deg); }
+        }
+        @keyframes dash {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes pulse-ring {
+          0% { r: 6; opacity: 1; }
+          100% { r: 18; opacity: 0; }
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+        @keyframes draw-line {
+          0% { stroke-dashoffset: 200; opacity: 0.2; }
+          50% { opacity: 1; }
+          100% { stroke-dashoffset: 0; opacity: 0.2; }
+        }
+        @keyframes node-pulse {
+          0%, 100% { opacity: 0.5; r: 5; }
+          50% { opacity: 1; r: 8; }
+        }
+        .float-1 { animation: float1 5s ease-in-out infinite; }
+        .float-2 { animation: float2 6.5s ease-in-out infinite; }
+        .float-3 { animation: float3 4.5s ease-in-out infinite; }
+        .float-slow { animation: floatSlow 8s ease-in-out infinite; }
+        .spin-slow { animation: spin-slow 18s linear infinite; transform-origin: center; }
+        .spin-reverse { animation: spin-reverse 12s linear infinite; transform-origin: center; }
+      `}</style>
+
       {/* Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -24,29 +74,78 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-28 px-6 bg-gradient-to-br from-orange-50 via-white to-amber-50 text-center">
-        <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 선도하는 기업</p>
-        <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900 mb-6">
-          미래를 함께<br />
-          <span className="text-orange-500">만들어 갑니다</span>
-        </h1>
-        <p className="max-w-xl mx-auto text-lg text-gray-500 mb-10">
-          NexusCorp는 AI·클라우드·디지털 트랜스포메이션 솔루션으로
-          고객의 비즈니스를 한 단계 성장시킵니다.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="#services"
-            className="rounded-full bg-orange-500 px-8 py-3 text-base font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg"
-          >
-            서비스 알아보기
-          </a>
-          <a
-            href="#contact"
-            className="rounded-full border border-orange-300 px-8 py-3 text-base font-semibold text-orange-500 hover:bg-orange-50 transition-colors"
-          >
-            문의하기
-          </a>
+      <section className="relative overflow-hidden pt-40 pb-28 px-6 bg-gradient-to-br from-orange-50 via-white to-amber-50 text-center">
+
+        {/* SVG 배경 애니메이션 */}
+        <div className="pointer-events-none absolute inset-0 w-full h-full">
+          <svg className="w-full h-full" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+
+            {/* 큰 원형 링 — 왼쪽 */}
+            <circle cx="120" cy="200" r="110" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.18" className="spin-slow" style={{transformOrigin: '120px 200px'}} />
+            <circle cx="120" cy="200" r="75" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.2" strokeDasharray="8 6" className="spin-reverse" style={{transformOrigin: '120px 200px'}} />
+
+            {/* 떠다니는 삼각형 */}
+            <polygon points="200,80 230,130 170,130" fill="#fb923c" fillOpacity="0.12" className="float-1" style={{transformOrigin: '200px 105px'}} />
+
+            {/* 떠다니는 다이아몬드 */}
+            <rect x="980" y="60" width="52" height="52" rx="6" fill="#fdba74" fillOpacity="0.15" className="float-2" style={{transform: 'rotate(45deg)', transformOrigin: '1006px 86px'}} />
+
+            {/* 큰 원형 링 — 오른쪽 */}
+            <circle cx="1100" cy="320" r="140" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.14" className="spin-reverse" style={{transformOrigin: '1100px 320px'}} />
+            <circle cx="1100" cy="320" r="95" fill="none" stroke="#f97316" strokeWidth="1" strokeOpacity="0.18" strokeDasharray="5 8" className="spin-slow" style={{transformOrigin: '1100px 320px'}} />
+
+            {/* 육각형 — 오른쪽 위 */}
+            <polygon points="1050,80 1070,60 1090,80 1090,110 1070,130 1050,110" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.25" className="float-3" style={{transformOrigin: '1070px 95px'}} />
+
+            {/* 가운데 아래 큰 원 */}
+            <circle cx="600" cy="640" r="180" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.12" strokeDasharray="10 8" className="spin-slow" style={{transformOrigin: '600px 640px'}} />
+
+            {/* 떠다니는 작은 원들 */}
+            <circle cx="350" cy="120" r="10" fill="#fb923c" fillOpacity="0.18" className="float-2" style={{transformOrigin: '350px 120px'}} />
+            <circle cx="860" cy="160" r="14" fill="#fdba74" fillOpacity="0.2" className="float-1" style={{transformOrigin: '860px 160px'}} />
+            <circle cx="480" cy="580" r="10" fill="#fb923c" fillOpacity="0.15" className="float-3" style={{transformOrigin: '480px 580px'}} />
+            <circle cx="740" cy="560" r="8" fill="#fdba74" fillOpacity="0.18" className="float-2" style={{transformOrigin: '740px 560px'}} />
+
+            {/* 떠다니는 작은 사각형 */}
+            <rect x="60" y="480" width="28" height="28" rx="4" fill="#fb923c" fillOpacity="0.12" className="float-slow" style={{transformOrigin: '74px 494px'}} />
+            <rect x="1120" y="500" width="22" height="22" rx="3" fill="#fdba74" fillOpacity="0.15" className="float-2" style={{transformOrigin: '1131px 511px'}} />
+
+            {/* 곡선 흐름 라인 */}
+            <path d="M0,350 Q300,200 600,360 Q900,520 1200,350" fill="none" stroke="#fb923c" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="12 8">
+              <animate attributeName="stroke-dashoffset" from="200" to="0" dur="6s" repeatCount="indefinite" />
+            </path>
+            <path d="M0,420 Q300,280 600,430 Q900,580 1200,420" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.08" strokeDasharray="10 10">
+              <animate attributeName="stroke-dashoffset" from="200" to="0" dur="9s" repeatCount="indefinite" />
+            </path>
+
+          </svg>
+        </div>
+
+        {/* Hero 텍스트 */}
+        <div className="relative z-10">
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 선도하는 기업</p>
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900 mb-6">
+            미래를 함께<br />
+            <span className="text-orange-500">만들어 갑니다</span>
+          </h1>
+          <p className="max-w-xl mx-auto text-lg text-gray-500 mb-10">
+            NexusCorp는 AI·클라우드·디지털 트랜스포메이션 솔루션으로
+            고객의 비즈니스를 한 단계 성장시킵니다.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="#services"
+              className="rounded-full bg-orange-500 px-8 py-3 text-base font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg"
+            >
+              서비스 알아보기
+            </a>
+            <a
+              href="#contact"
+              className="rounded-full border border-orange-300 px-8 py-3 text-base font-semibold text-orange-500 hover:bg-orange-50 transition-colors"
+            >
+              문의하기
+            </a>
+          </div>
         </div>
       </section>
 
@@ -70,20 +169,81 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { emoji: "🏢", label: "본사", value: "서울 강남구" },
-              { emoji: "👥", label: "임직원", value: "450 +" },
-              { emoji: "🌏", label: "글로벌 거점", value: "12개국" },
-              { emoji: "🏆", label: "수상 실적", value: "35개 이상" },
-            ].map((card) => (
-              <div key={card.label} className="rounded-2xl bg-orange-50 p-6 text-center">
-                <div className="text-3xl mb-2">{card.emoji}</div>
-                <div className="text-xs text-gray-400 mb-1">{card.label}</div>
-                <div className="text-xl font-bold text-gray-800">{card.value}</div>
-              </div>
-            ))}
+
+          {/* About SVG 애니메이션 — 네트워크 노드 */}
+          <div className="flex items-center justify-center">
+            <svg viewBox="0 0 340 300" className="w-full max-w-sm" xmlns="http://www.w3.org/2000/svg">
+
+              {/* 연결선 */}
+              {[
+                { x1: 170, y1: 60,  x2: 60,  y2: 160, delay: "0s" },
+                { x1: 170, y1: 60,  x2: 170, y2: 170, delay: "0.4s" },
+                { x1: 170, y1: 60,  x2: 280, y2: 160, delay: "0.8s" },
+                { x1: 60,  y1: 160, x2: 170, y2: 170, delay: "1.2s" },
+                { x1: 280, y1: 160, x2: 170, y2: 170, delay: "1.6s" },
+                { x1: 60,  y1: 160, x2: 100, y2: 255, delay: "2s"   },
+                { x1: 170, y1: 170, x2: 240, y2: 255, delay: "2.4s" },
+                { x1: 280, y1: 160, x2: 240, y2: 255, delay: "2.8s" },
+              ].map((l, i) => (
+                <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+                  stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.3"
+                  strokeDasharray="200" strokeDashoffset="200">
+                  <animate attributeName="stroke-dashoffset" from="200" to="0"
+                    dur="1.5s" begin={l.delay} repeatCount="indefinite" />
+                  <animate attributeName="stroke-opacity" values="0.3;0.7;0.3"
+                    dur="3s" begin={l.delay} repeatCount="indefinite" />
+                </line>
+              ))}
+
+              {/* 노드 */}
+              {[
+                { cx: 170, cy: 60,  r: 18, delay: "0s",   label: "AI" },
+                { cx: 60,  cy: 160, r: 14, delay: "0.5s", label: "Cloud" },
+                { cx: 280, cy: 160, r: 14, delay: "1s",   label: "Data" },
+                { cx: 170, cy: 170, r: 16, delay: "1.5s", label: "Core" },
+                { cx: 100, cy: 255, r: 12, delay: "2s",   label: "Sec" },
+                { cx: 240, cy: 255, r: 12, delay: "2.5s", label: "Dev" },
+              ].map((n, i) => (
+                <g key={i}>
+                  {/* 펄스 링 */}
+                  <circle cx={n.cx} cy={n.cy} r={n.r} fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0">
+                    <animate attributeName="r" values={`${n.r};${n.r + 14};${n.r + 14}`}
+                      dur="2.5s" begin={n.delay} repeatCount="indefinite" />
+                    <animate attributeName="stroke-opacity" values="0.6;0;0"
+                      dur="2.5s" begin={n.delay} repeatCount="indefinite" />
+                  </circle>
+                  {/* 채워진 원 */}
+                  <circle cx={n.cx} cy={n.cy} r={n.r} fill="#fff7ed" stroke="#fb923c" strokeWidth="2">
+                    <animate attributeName="r" values={`${n.r};${n.r + 2};${n.r}`}
+                      dur="2.5s" begin={n.delay} repeatCount="indefinite" />
+                  </circle>
+                  {/* 라벨 */}
+                  <text x={n.cx} y={n.cy + 4} textAnchor="middle"
+                    fontSize="8" fontWeight="700" fill="#ea580c" fontFamily="sans-serif">
+                    {n.label}
+                  </text>
+                </g>
+              ))}
+
+              {/* 중앙 이동 패킷 (작은 원이 선 위를 이동) */}
+              {[
+                { x1: 170, y1: 60,  x2: 60,  y2: 160, dur: "2s",   begin: "0.3s" },
+                { x1: 170, y1: 60,  x2: 280, y2: 160, dur: "2.2s", begin: "1s"   },
+                { x1: 170, y1: 170, x2: 240, y2: 255, dur: "1.8s", begin: "1.8s" },
+              ].map((p, i) => (
+                <circle key={i} r="4" fill="#f97316" fillOpacity="0.8">
+                  <animateMotion dur={p.dur} begin={p.begin} repeatCount="indefinite">
+                    <mpath href={`#path-${i}`} />
+                  </animateMotion>
+                </circle>
+              ))}
+              <path id="path-0" d="M170,60 L60,160" fill="none" />
+              <path id="path-1" d="M170,60 L280,160" fill="none" />
+              <path id="path-2" d="M170,170 L240,255" fill="none" />
+
+            </svg>
           </div>
+
         </div>
       </section>
 
@@ -96,41 +256,14 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              {
-                icon: "🤖",
-                title: "AI 솔루션",
-                desc: "머신러닝 및 생성형 AI 기술을 활용해 업무 자동화와 의사결정 고도화를 실현합니다.",
-              },
-              {
-                icon: "☁️",
-                title: "클라우드 전환",
-                desc: "안전하고 확장 가능한 클라우드 인프라 구축으로 비용 절감과 운영 효율성을 동시에 달성합니다.",
-              },
-              {
-                icon: "📊",
-                title: "데이터 분석",
-                desc: "실시간 데이터 파이프라인과 BI 대시보드로 비즈니스 인사이트를 즉시 확인하세요.",
-              },
-              {
-                icon: "🔒",
-                title: "사이버 보안",
-                desc: "최신 위협 인텔리전스와 제로트러스트 아키텍처로 기업 자산을 안전하게 보호합니다.",
-              },
-              {
-                icon: "📱",
-                title: "모바일 & 웹 개발",
-                desc: "사용자 경험 중심의 반응형 웹 및 네이티브 앱을 빠르고 정확하게 구현합니다.",
-              },
-              {
-                icon: "🔗",
-                title: "시스템 통합",
-                desc: "ERP·CRM·레거시 시스템을 원활하게 연결하여 데이터 사일로를 해소합니다.",
-              },
+              { icon: "🤖", title: "AI 솔루션", desc: "머신러닝 및 생성형 AI 기술을 활용해 업무 자동화와 의사결정 고도화를 실현합니다." },
+              { icon: "☁️", title: "클라우드 전환", desc: "안전하고 확장 가능한 클라우드 인프라 구축으로 비용 절감과 운영 효율성을 동시에 달성합니다." },
+              { icon: "📊", title: "데이터 분석", desc: "실시간 데이터 파이프라인과 BI 대시보드로 비즈니스 인사이트를 즉시 확인하세요." },
+              { icon: "🔒", title: "사이버 보안", desc: "최신 위협 인텔리전스와 제로트러스트 아키텍처로 기업 자산을 안전하게 보호합니다." },
+              { icon: "📱", title: "모바일 & 웹 개발", desc: "사용자 경험 중심의 반응형 웹 및 네이티브 앱을 빠르고 정확하게 구현합니다." },
+              { icon: "🔗", title: "시스템 통합", desc: "ERP·CRM·레거시 시스템을 원활하게 연결하여 데이터 사일로를 해소합니다." },
             ].map((service) => (
-              <div
-                key={service.title}
-                className="rounded-2xl bg-white p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
-              >
+              <div key={service.title} className="rounded-2xl bg-white p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
                 <div className="text-4xl mb-4">{service.icon}</div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{service.title}</h3>
                 <p className="text-sm text-gray-500 leading-7">{service.desc}</p>
@@ -168,28 +301,14 @@ export default function Home() {
           프로젝트 문의, 파트너십, 채용 등 어떤 것이든 편하게 연락 주세요.
         </p>
         <form className="flex flex-col gap-4 text-left" onSubmit={(e) => { e.preventDefault(); alert('문의가 접수되었습니다! 빠르게 연락 드리겠습니다 😊'); }}>
-          <input
-            type="text"
-            placeholder="이름"
-            required
-            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
-          <input
-            type="email"
-            placeholder="이메일"
-            required
-            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
-          <textarea
-            placeholder="문의 내용"
-            rows={4}
-            required
-            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-full bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg"
-          >
+          <input type="text" placeholder="이름" required
+            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          <input type="email" placeholder="이메일" required
+            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          <textarea placeholder="문의 내용" rows={4} required
+            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+          <button type="submit"
+            className="w-full rounded-full bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg">
             문의 보내기
           </button>
         </form>
