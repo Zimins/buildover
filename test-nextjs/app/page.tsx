@@ -46,6 +46,18 @@ export default function Home() {
           0%, 100% { opacity: 0.5; r: 5; }
           50% { opacity: 1; r: 8; }
         }
+        @keyframes bouncy {
+          0%, 100% { transform: translateY(0px) scaleY(1); }
+          30% { transform: translateY(-18px) scaleY(1.08); }
+          50% { transform: translateY(-22px) scaleY(1.05); }
+          70% { transform: translateY(-6px) scaleY(0.96); }
+          85% { transform: translateY(-12px) scaleY(1.02); }
+          95% { transform: translateY(-2px) scaleY(0.99); }
+        }
+        .bounce-char {
+          display: inline-block;
+          animation: bouncy 1.4s ease-in-out infinite;
+        }
         .float-1 { animation: float1 5s ease-in-out infinite; }
         .float-2 { animation: float2 6.5s ease-in-out infinite; }
         .float-3 { animation: float3 4.5s ease-in-out infinite; }
@@ -125,8 +137,23 @@ export default function Home() {
         <div className="relative z-10">
           <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 선도하는 기업</p>
           <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900 mb-6">
-            미래를 함께<br />
-            <span className="text-orange-500">만들어 갑니다</span>
+            {'미래를 함께'.split('').map((char, i) => (
+              <span
+                key={i}
+                className="bounce-char"
+                style={{ animationDelay: `${i * 0.08}s` }}
+              >{char === ' ' ? '\u00A0' : char}</span>
+            ))}
+            <br />
+            <span className="text-orange-500">
+              {'만들어 갑니다'.split('').map((char, i) => (
+                <span
+                  key={i}
+                  className="bounce-char"
+                  style={{ animationDelay: `${(i + 6) * 0.08}s` }}
+                >{char === ' ' ? '\u00A0' : char}</span>
+              ))}
+            </span>
           </h1>
           <p className="max-w-xl mx-auto text-lg text-gray-500 mb-10">
             NexusCorp는 AI·클라우드·디지털 트랜스포메이션 솔루션으로
