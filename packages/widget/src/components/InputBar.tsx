@@ -69,23 +69,25 @@ export function InputBar({ onSend, onClear, disabled, status, statusMessage, sho
           {statusMessage}
         </div>
       )}
-      {selectedElement && (
-        <ElementChip
-          tagName={selectedElement.tagName}
-          selector={selectedElement.selector}
-          onRemove={() => setSelectedElement(null)}
+      <div className={`buildover-input-wrapper${selectedElement ? ' has-chip' : ''}`}>
+        {selectedElement && (
+          <ElementChip
+            tagName={selectedElement.tagName}
+            selector={selectedElement.selector}
+            onRemove={() => setSelectedElement(null)}
+          />
+        )}
+        <textarea
+          ref={textareaRef}
+          className="buildover-input"
+          placeholder={'변경하고 싶은 내용을 설명해주세요...\n\n⌘+Enter로 전송'}
+          value={message}
+          onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          rows={4}
         />
-      )}
-      <textarea
-        ref={textareaRef}
-        className="buildover-input"
-        placeholder={'변경하고 싶은 내용을 설명해주세요...\n\n⌘+Enter로 전송'}
-        value={message}
-        onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)}
-        onKeyDown={handleKeyDown}
-        disabled={disabled}
-        rows={4}
-      />
+      </div>
       <div className="buildover-input-footer">
         <div className="buildover-input-footer-left">
           <button
