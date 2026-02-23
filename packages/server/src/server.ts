@@ -10,7 +10,7 @@ import { BuildOverConfig, AgentResponse, FileChange } from './types.js';
 import { createProxy } from './proxy.js';
 import { SessionManager } from './session/manager.js';
 import { GitManager } from './git/manager.js';
-import { ClaudeAgent } from './agent/claude.js';
+import { AnthropicAgent } from './agent/anthropic-agent.js';
 
 export class BuildOverServer {
   private app: express.Application;
@@ -19,7 +19,9 @@ export class BuildOverServer {
   private config: BuildOverConfig & { port: number; widgetPath: string; projectRoot: string };
   private sessionManager: SessionManager;
   private gitManager: GitManager;
-  private agents: Map<string, ClaudeAgent> = new Map();
+  private agents: Map<string, AnthropicAgent> = new Map();
+  private sessionContexts: Map<string, { messageId: string; content: string }> = new Map();
+  private sessionWebSockets: Map<string, WebSocket> = new Map();
 
   private static resolveWidgetPath(): string {
     try {
@@ -122,6 +124,32 @@ export class BuildOverServer {
       }
     });
 
+    this.app.get('/buildover/api/commits', async (req: Request, res: Response) => {
+      try {
+        const limit = parseInt(req.query.limit as string || '30', 10);
+        const commits = await this.gitManager.getCommitHistory(limit);
+        res.json(commits);
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    this.app.post('/buildover/api/restore', async (req: Request, res: Response) => {
+      try {
+        const { hash } = req.body;
+        if (!hash) {
+          res.status(400).json({ error: 'hash is required' });
+          return;
+        }
+        await this.gitManager.restore(hash);
+        console.log(chalk.green(`[Git] Restored to ${hash.substring(0, 7)}`));
+        res.json({ success: true });
+      } catch (error: any) {
+        console.error(chalk.red('[Git] Restore failed:'), error.message);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
     this.app.use(createProxy(this.config.targetUrl));
   }
 
@@ -154,16 +182,25 @@ export class BuildOverServer {
           console.log(chalk.magenta(`[WS] Message type: ${message.type}`));
 
           if (message.type === 'init') {
-            sessionId = message.sessionId;
-            console.log(chalk.blue(`[WS] Session initialized: ${sessionId}`));
+            sessionId = message.sessionId as string;
+            this.sessionWebSockets.set(sessionId, ws);
+            console.log(chalk.blue(`[WS] Session registered: ${sessionId} (agent exists: ${this.agents.has(sessionId)})`));
           } else if (message.type === 'chat') {
             if (!sessionId) {
               sessionId = `session-${Date.now()}`;
+              this.sessionWebSockets.set(sessionId, ws);
               console.log(chalk.blue(`[WS] Auto-created session: ${sessionId}`));
             }
             console.log(chalk.blue(`[WS] Chat message: "${message.content.substring(0, 100)}"`));
-            console.log(chalk.blue(`[WS] WebSocket readyState: ${ws.readyState} (1=OPEN)`));
-            this.handleChatMessage(sessionId, message.content, ws);
+            this.handleChatMessage(sessionId, message.content);
+          } else if (message.type === 'clear') {
+            if (sessionId) {
+              console.log(chalk.blue(`[WS] Clearing session: ${sessionId}`));
+              this.agents.get(sessionId)?.stop();
+              this.agents.delete(sessionId);
+              this.sessionContexts.delete(sessionId);
+            }
+            this.wsSend(ws, { type: 'cleared' });
           } else {
             console.log(chalk.yellow(`[WS] Unknown message type: ${message.type}`));
           }
@@ -175,12 +212,9 @@ export class BuildOverServer {
       ws.on('close', (code, reason) => {
         console.log(chalk.yellow(`[WS] Client disconnected, code=${code}, reason=${reason || 'none'}`));
         if (sessionId) {
-          const agent = this.agents.get(sessionId);
-          if (agent) {
-            console.log(chalk.yellow(`[WS] Stopping agent for session: ${sessionId}`));
-            agent.stop();
-            this.agents.delete(sessionId);
-          }
+          this.sessionWebSockets.delete(sessionId);
+          // Keep agent alive — client may reconnect with same sessionId
+          console.log(chalk.yellow(`[WS] Session ${sessionId} disconnected, agent preserved`));
         }
       });
 
@@ -200,66 +234,72 @@ export class BuildOverServer {
     }
   }
 
-  private handleChatMessage(sessionId: string, content: string, ws: WebSocket): void {
+  private sendToSession(sessionId: string, data: object): void {
+    const ws = this.sessionWebSockets.get(sessionId);
+    if (ws) this.wsSend(ws, data);
+  }
+
+  private handleChatMessage(sessionId: string, content: string): void {
     let agent = this.agents.get(sessionId);
     const messageId = `msg-${Date.now()}`;
-    console.log(chalk.blue(`[Chat] handleChatMessage called, sessionId=${sessionId}, messageId=${messageId}`));
-    console.log(chalk.blue(`[Chat] Existing agent: ${agent ? 'yes' : 'no'}, agents count: ${this.agents.size}`));
+    console.log(chalk.blue(`[Chat] sessionId=${sessionId}, messageId=${messageId}, agent exists: ${!!agent}`));
+
+    this.sessionContexts.set(sessionId, { messageId, content });
 
     if (!agent) {
-      console.log(chalk.blue(`[Chat] Creating new ClaudeAgent for session: ${sessionId}`));
-      agent = new ClaudeAgent(this.config.projectRoot);
+      console.log(chalk.blue(`[Chat] Creating new AnthropicAgent for session: ${sessionId}`));
+      const apiKey = this.config.apiKey || process.env.ANTHROPIC_API_KEY || '';
+      agent = new AnthropicAgent(this.config.projectRoot, apiKey);
 
-      agent.on('response', (response: AgentResponse) => {
+      agent.on('response', async (response: AgentResponse) => {
+        const ctx = this.sessionContexts.get(sessionId) || { messageId, content };
+
         if (response.type === 'text') {
-          this.wsSend(ws, {
-            type: 'stream',
-            content: response.content,
-            messageId,
-          });
+          this.sendToSession(sessionId, { type: 'stream', content: response.content, messageId: ctx.messageId });
         } else if (response.type === 'tool_use') {
           const toolName = response.toolUse?.name || 'unknown';
           const toolInput = response.toolUse?.input || {};
-          let statusMsg = `Using tool: ${toolName}`;
-          if (toolName === 'Read' && toolInput.file_path) {
-            statusMsg = `Reading ${toolInput.file_path.split('/').pop()}`;
-          } else if (toolName === 'Edit' && toolInput.file_path) {
-            statusMsg = `Editing ${toolInput.file_path.split('/').pop()}`;
-          } else if (toolName === 'Write' && toolInput.file_path) {
-            statusMsg = `Creating ${toolInput.file_path.split('/').pop()}`;
-          } else if (toolName === 'Glob') {
-            statusMsg = `Searching files: ${toolInput.pattern || ''}`;
-          } else if (toolName === 'Grep') {
-            statusMsg = `Searching for: ${toolInput.pattern || ''}`;
-          }
-          this.wsSend(ws, { type: 'status', status: 'editing', message: statusMsg });
+          let statusMsg = `도구 사용 중: ${toolName}`;
+          if (toolName === 'read_file') statusMsg = `파일 읽는 중: ${String(toolInput.path || '').split('/').pop()}`;
+          else if (toolName === 'str_replace') statusMsg = `파일 수정 중: ${String(toolInput.path || '').split('/').pop()}`;
+          else if (toolName === 'write_file') statusMsg = `파일 생성 중: ${String(toolInput.path || '').split('/').pop()}`;
+          else if (toolName === 'glob_tool') statusMsg = `파일 검색 중: ${toolInput.pattern || ''}`;
+          else if (toolName === 'grep_tool') statusMsg = `코드 검색 중: ${toolInput.pattern || ''}`;
+          this.sendToSession(sessionId, { type: 'status', status: 'editing', message: statusMsg });
         } else if (response.type === 'complete') {
-          this.wsSend(ws, { type: 'stream.end', messageId });
-          this.wsSend(ws, { type: 'status', status: 'done', message: 'Done' });
+          this.sendToSession(sessionId, { type: 'stream.end', messageId: ctx.messageId });
+          this.sendToSession(sessionId, { type: 'status', status: 'done', message: '완료' });
+
+          try {
+            const commitMsg = ctx.content.length > 72 ? ctx.content.substring(0, 69) + '...' : ctx.content;
+            const hash = await this.gitManager.autoCommit(commitMsg);
+            if (hash) {
+              const history = await this.gitManager.getCommitHistory(1);
+              if (history.length > 0) {
+                console.log(chalk.green(`[Git] Auto-committed: ${history[0].shortHash} ${commitMsg}`));
+                this.sendToSession(sessionId, { type: 'commit.created', commit: history[0] });
+              }
+            }
+          } catch (err: any) {
+            console.warn(chalk.yellow(`[Git] Auto-commit skipped: ${err.message}`));
+          }
         } else if (response.type === 'error') {
-          this.wsSend(ws, { type: 'error', message: response.content });
+          this.sendToSession(sessionId, { type: 'error', message: response.content });
         }
       });
 
       agent.on('file_change', (change: FileChange) => {
-        this.wsSend(ws, {
-          type: 'file.changed',
-          path: change.path,
-          additions: 0,
-          deletions: 0,
-        });
+        this.sendToSession(sessionId, { type: 'file.changed', path: change.path, additions: 0, deletions: 0 });
       });
 
       agent.on('error', (error: string) => {
-        this.wsSend(ws, { type: 'error', message: error });
+        this.sendToSession(sessionId, { type: 'error', message: error });
       });
 
       this.agents.set(sessionId, agent);
     }
 
-    // Send initial status
-    this.wsSend(ws, { type: 'status', status: 'analyzing', message: 'AI is analyzing your request...' });
-
+    this.sendToSession(sessionId, { type: 'status', status: 'analyzing', message: 'AI가 요청을 분석하고 있어요...' });
     agent.sendMessage(content);
   }
 
@@ -279,5 +319,7 @@ export class BuildOverServer {
     this.server.close();
     this.agents.forEach(agent => agent.stop());
     this.agents.clear();
+    this.sessionWebSockets.clear();
+    this.sessionContexts.clear();
   }
 }

@@ -1,0 +1,15 @@
+# Git history (runtime git repo is created fresh in Dockerfile)
+.git
+**/.git
+
+# Dependencies (installed in container)
+node_modules
+**/node_modules
+
+# Build outputs (rebuilt in container)
+packages/*/dist
+test-nextjs/.next
+
+# Dev/local files
+.env
+*.local

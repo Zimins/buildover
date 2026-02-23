@@ -1,5 +1,5 @@
 import simpleGit, { SimpleGit } from 'simple-git';
-import { GitBranch, GitDiff, MergeStrategy, MergeResult } from './types.js';
+import { GitBranch, GitDiff, MergeStrategy, MergeResult, CommitEntry } from './types.js';
 
 export class GitManager {
   private git: SimpleGit;
@@ -19,9 +19,26 @@ export class GitManager {
     return branchName;
   }
 
-  async autoCommit(message: string): Promise<void> {
+  async autoCommit(message: string): Promise<string | null> {
+    const status = await this.git.status();
+    if (status.files.length === 0) return null;
     await this.git.add('.');
-    await this.git.commit(message);
+    const result = await this.git.commit(message);
+    return result.commit || null;
+  }
+
+  async getCommitHistory(limit = 20): Promise<CommitEntry[]> {
+    try {
+      const log = await this.git.log({ maxCount: limit });
+      return log.all.map(entry => ({
+        hash: entry.hash,
+        shortHash: entry.hash.substring(0, 7),
+        message: entry.message,
+        date: entry.date,
+      }));
+    } catch {
+      return [];
+    }
   }
 
   async getDiff(branchName?: string): Promise<GitDiff> {
@@ -75,6 +92,10 @@ export class GitManager {
     }
 
     await this.git.deleteLocalBranch(branchName, true);
+  }
+
+  async restore(hash: string): Promise<void> {
+    await this.git.checkout([hash, '--', '.']);
   }
 
   async getCurrentBranch(): Promise<string> {

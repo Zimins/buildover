@@ -5,14 +5,16 @@ export type MessageHandler = (message: ServerMessage) => void;
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private url: string;
+  private sessionId: string;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 10;
-  private reconnectDelay = 1000; // Start with 1 second
+  private reconnectDelay = 1000;
   private messageHandlers: Set<MessageHandler> = new Set();
   private intentionallyClosed = false;
 
-  constructor(url: string) {
+  constructor(url: string, sessionId: string) {
     this.url = url;
+    this.sessionId = sessionId;
   }
 
   connect(): void {
@@ -29,6 +31,7 @@ export class WebSocketClient {
         console.log('[BuildOver] WebSocket connected');
         this.reconnectAttempts = 0;
         this.reconnectDelay = 1000;
+        this.ws!.send(JSON.stringify({ type: 'init', sessionId: this.sessionId }));
       };
 
       this.ws.onmessage = (event) => {

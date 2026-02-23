@@ -21,9 +21,9 @@ export function MessageList({ messages, fileChanges }: MessageListProps) {
       <div className="buildover-empty">
         <div className="buildover-empty-icon">💬</div>
         <div className="buildover-empty-text">
-          Start a conversation with BuildOver AI.
+          BuildOver AI와 대화를 시작하세요.
           <br />
-          Ask questions or request code changes.
+          질문하거나 코드 변경을 요청해보세요.
         </div>
       </div>
     );

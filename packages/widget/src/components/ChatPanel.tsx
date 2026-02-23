@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import { useState } from 'preact/hooks';
 import type { Message, FileChange, AIStatus } from '../types';
 import { MessageList } from './MessageList';
 import { InputBar } from './InputBar';
@@ -12,6 +13,7 @@ interface ChatPanelProps {
   status: AIStatus;
   statusMessage?: string;
   onSend: (message: string, createBranch: boolean) => void;
+  onClear: () => void;
 }
 
 export function ChatPanel({
@@ -22,18 +24,22 @@ export function ChatPanel({
   status,
   statusMessage,
   onSend,
+  onClear,
 }: ChatPanelProps) {
+  const [showHistory, setShowHistory] = useState(false);
+
   return (
-    <div className={`buildover-panel ${isOpen ? '' : 'closed'}`}>
-      <div className="buildover-header">
-        <h3>BuildOver AI</h3>
-        <button className="buildover-close" onClick={onClose}>
-          ×
-        </button>
-      </div>
-      <MessageList messages={messages} fileChanges={fileChanges} />
-      <StatusBar status={status} message={statusMessage} />
-      <InputBar onSend={onSend} disabled={status !== 'idle' && status !== 'done'} />
+    <div className={`buildover-panel ${isOpen ? '' : 'closed'} ${showHistory ? 'expanded' : 'compact'}`}>
+      {showHistory && <MessageList messages={messages} fileChanges={fileChanges} />}
+      {showHistory && <StatusBar status={status} message={statusMessage} />}
+      <InputBar
+        onSend={onSend}
+        onClear={onClear}
+        disabled={status !== 'idle' && status !== 'done'}
+        status={status}
+        statusMessage={statusMessage}
+        showStatus={!showHistory}
+      />
     </div>
   );
 }

@@ -9,7 +9,7 @@ export function createDevCommand(): Command {
 
   command
     .description('Start BuildOver development server')
-    .option('-p, --port <port>', 'BuildOver server port', '4100')
+    .option('-p, --port <port>', 'BuildOver server port', process.env.PORT || '4100')
     .option('-t, --target <url>', 'Target development server URL')
     .option('-s, --serve', 'Start the target dev server automatically', false)
     .option('-o, --open', 'Open browser automatically', false)

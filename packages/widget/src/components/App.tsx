@@ -2,24 +2,42 @@ import { h } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { FAB } from './FAB';
 import { ChatPanel } from './ChatPanel';
+import { HistorySidebar } from './HistorySidebar';
 import { WebSocketClient } from '../ws/client';
-import type { Message, FileChange, AIStatus, ServerMessage } from '../types';
+import type { Message, FileChange, AIStatus, ServerMessage, CommitEntry } from '../types';
 
 const log = (msg: string, ...args: any[]) => console.log(`[BuildOver] ${msg}`, ...args);
 const logWarn = (msg: string, ...args: any[]) => console.warn(`[BuildOver] ${msg}`, ...args);
+
+const SESSION_KEY = 'buildover-session-id';
+
+function getOrCreateSessionId(): string {
+  let id = localStorage.getItem(SESSION_KEY);
+  if (!id) {
+    id = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(SESSION_KEY, id);
+  }
+  return id;
+}
 
 interface AppProps {
   wsUrl?: string;
 }
 
 export function App({ wsUrl }: AppProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [fileChanges, setFileChanges] = useState<FileChange[]>([]);
   const [status, setStatus] = useState<AIStatus>('idle');
   const [statusMessage, setStatusMessage] = useState<string | undefined>();
+  const [commits, setCommits] = useState<CommitEntry[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const wsRef = useRef<WebSocketClient | null>(null);
   const streamBufferRef = useRef<{ [messageId: string]: string }>({});
+
+  const apiBase = wsUrl
+    ? wsUrl.replace(/^ws/, 'http').replace(/\/buildover\/ws$/, '')
+    : '';
 
   useEffect(() => {
     if (!wsUrl) {
@@ -27,8 +45,20 @@ export function App({ wsUrl }: AppProps) {
       return;
     }
 
+    if (apiBase) {
+      fetch(`${apiBase}/buildover/api/commits?limit=30`)
+        .then(r => r.json())
+        .then((data: CommitEntry[]) => {
+          if (Array.isArray(data)) setCommits(data);
+        })
+        .catch(err => logWarn('Failed to fetch commits:', err));
+    }
+
+    const sessionId = getOrCreateSessionId();
+    log(`Session ID: ${sessionId}`);
+
     log(`Connecting to WebSocket: ${wsUrl}`);
-    const ws = new WebSocketClient(wsUrl);
+    const ws = new WebSocketClient(wsUrl, sessionId);
     wsRef.current = ws;
 
     ws.onMessage((message: ServerMessage) => {
@@ -59,12 +89,9 @@ export function App({ wsUrl }: AppProps) {
         const msgId = message.messageId || 'default';
         const buffer = streamBufferRef.current;
         buffer[msgId] = (buffer[msgId] || '') + message.content;
-        log(`Stream: msgId=${msgId}, total=${buffer[msgId].length} chars`);
 
         setMessages((prev) => {
-          const existing = prev.find(
-            (m) => m.id === msgId && m.role === 'assistant'
-          );
+          const existing = prev.find((m) => m.id === msgId && m.role === 'assistant');
           if (existing) {
             return prev.map((m) =>
               m.id === msgId && m.role === 'assistant'
@@ -74,13 +101,7 @@ export function App({ wsUrl }: AppProps) {
           }
           return [
             ...prev,
-            {
-              id: msgId,
-              role: 'assistant',
-              content: buffer[msgId],
-              timestamp: Date.now(),
-              streaming: true,
-            },
+            { id: msgId, role: 'assistant', content: buffer[msgId], timestamp: Date.now(), streaming: true },
           ];
         });
         break;
@@ -88,34 +109,24 @@ export function App({ wsUrl }: AppProps) {
 
       case 'stream.end': {
         const msgId = message.messageId;
-        log(`Stream ended: msgId=${msgId}`);
         delete streamBufferRef.current[msgId];
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === msgId && m.role === 'assistant'
-              ? { ...m, streaming: false }
-              : m
+            m.id === msgId && m.role === 'assistant' ? { ...m, streaming: false } : m
           )
         );
         break;
       }
 
       case 'file.changed': {
-        log(`File changed: ${message.path}`);
         setFileChanges((prev) => [
           ...prev,
-          {
-            path: message.path,
-            additions: message.additions,
-            deletions: message.deletions,
-            diff: message.diff,
-          },
+          { path: message.path, additions: message.additions, deletions: message.deletions, diff: message.diff },
         ]);
         break;
       }
 
       case 'status': {
-        log(`Status: ${message.status} - ${message.message}`);
         setStatus(message.status);
         setStatusMessage(message.message);
         break;
@@ -125,55 +136,62 @@ export function App({ wsUrl }: AppProps) {
         logWarn(`Error from server: ${message.message}`);
         setMessages((prev) => [
           ...prev,
-          {
-            id: `error-${Date.now()}`,
-            role: 'assistant',
-            content: `Error: ${message.message}`,
-            timestamp: Date.now(),
-          },
+          { id: `error-${Date.now()}`, role: 'assistant', content: `Error: ${message.message}`, timestamp: Date.now() },
         ]);
         setStatus('idle');
+        break;
+      }
+
+      case 'commit.created': {
+        setCommits((prev) => [message.commit, ...prev]);
+        break;
+      }
+
+      case 'cleared': {
+        log('Session cleared by server');
+        setMessages([]);
+        setFileChanges([]);
+        setStatus('idle');
+        setStatusMessage(undefined);
+        streamBufferRef.current = {};
         break;
       }
     }
   }, []);
 
-  const handleSend = useCallback(
-    (content: string, createBranch: boolean) => {
-      const connected = wsRef.current?.isConnected() || false;
-      log(`Sending message: "${content.substring(0, 50)}...", ws connected: ${connected}`);
+  const handleSend = useCallback((content: string, createBranch: boolean) => {
+    const connected = wsRef.current?.isConnected() || false;
+    if (!connected) logWarn('WebSocket not connected!');
 
-      if (!connected) {
-        logWarn('WebSocket not connected! Message may not be delivered.');
-      }
+    setMessages((prev) => [
+      ...prev,
+      { id: `user-${Date.now()}`, role: 'user', content, timestamp: Date.now() },
+    ]);
+    setFileChanges([]);
+    setStatus('analyzing');
+    setStatusMessage('AI가 요청을 분석하고 있어요...');
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `user-${Date.now()}`,
-          role: 'user',
-          content,
-          timestamp: Date.now(),
-        },
-      ]);
+    wsRef.current?.send({ type: 'chat', content, createBranch });
+  }, []);
 
-      setFileChanges([]);
-      setStatus('analyzing');
-      setStatusMessage('AI is analyzing your request...');
+  const handleClear = useCallback(() => {
+    // Generate new sessionId so next reconnect starts fresh
+    const newId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(SESSION_KEY, newId);
 
-      wsRef.current?.send({ type: 'chat', content, createBranch });
-      log('Message sent via WebSocket');
-    },
-    []
-  );
-
-  const toggleOpen = () => {
-    setIsOpen((prev) => !prev);
-  };
+    // Tell server to clear the current session
+    wsRef.current?.send({ type: 'clear' });
+  }, []);
 
   return (
     <div className="buildover-container">
-      <FAB onClick={toggleOpen} isOpen={isOpen} />
+      <HistorySidebar
+        commits={commits}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen((prev) => !prev)}
+        apiBase={apiBase}
+      />
+      <FAB onClick={() => setIsOpen((prev) => !prev)} isOpen={isOpen} />
       <ChatPanel
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
@@ -182,6 +200,7 @@ export function App({ wsUrl }: AppProps) {
         status={status}
         statusMessage={statusMessage}
         onSend={handleSend}
+        onClear={handleClear}
       />
     </div>
   );

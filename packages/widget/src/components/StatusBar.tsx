@@ -25,11 +25,11 @@ export function StatusBar({ status, message }: StatusBarProps) {
 function getDefaultStatusText(status: AIStatus): string {
   switch (status) {
     case 'analyzing':
-      return 'AI is analyzing...';
+      return 'AI가 분석 중...';
     case 'editing':
-      return 'AI is editing files...';
+      return 'AI가 파일을 수정 중...';
     case 'done':
-      return 'Done!';
+      return '완료!';
     default:
       return '';
   }

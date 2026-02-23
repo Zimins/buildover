@@ -4,6 +4,13 @@ export interface GitBranch {
   commit: string;
 }
 
+export interface CommitEntry {
+  hash: string;
+  shortHash: string;
+  message: string;
+  date: string;
+}
+
 export interface GitDiff {
   files: {
     path: string;

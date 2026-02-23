@@ -1,11 +1,20 @@
 // Client-to-Server messages
+export interface InitMessage {
+  type: 'init';
+  sessionId: string;
+}
+
 export interface ChatMessage {
   type: 'chat';
   content: string;
   createBranch?: boolean;
 }
 
-export type ClientMessage = ChatMessage;
+export interface ClearMessage {
+  type: 'clear';
+}
+
+export type ClientMessage = InitMessage | ChatMessage | ClearMessage;
 
 // Server-to-Client messages
 export interface StreamMessage {
@@ -38,12 +47,30 @@ export interface ErrorMessage {
   message: string;
 }
 
+export interface CommitEntry {
+  hash: string;
+  shortHash: string;
+  message: string;
+  date: string;
+}
+
+export interface CommitCreatedMessage {
+  type: 'commit.created';
+  commit: CommitEntry;
+}
+
+export interface ClearedMessage {
+  type: 'cleared';
+}
+
 export type ServerMessage =
   | StreamMessage
   | StreamEndMessage
   | FileChangedMessage
   | StatusMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | CommitCreatedMessage
+  | ClearedMessage;
 
 // UI State
 export interface Message {

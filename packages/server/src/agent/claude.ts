@@ -54,12 +54,16 @@ export class ClaudeAgent extends EventEmitter {
     console.log(chalk.blue(`[Agent] Args: ${args.join(' ')}`));
     console.log(chalk.blue(`[Agent] Prompt: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"`));
 
+    const env = { ...process.env };
+    delete env.CLAUDECODE;
+
     this.currentProcess = spawn(
       ClaudeAgent.claudePath,
       args,
       {
         cwd: this.projectRoot,
         stdio: ['pipe', 'pipe', 'pipe'],
+        env,
       }
     );
 
