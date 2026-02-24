@@ -1,5 +1,7 @@
 'use client';
 
+import MagnetLines from './components/MagnetLines';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-800">
@@ -79,49 +81,17 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-40 pb-28 px-6 bg-gradient-to-br from-orange-50 via-white to-amber-50 text-center">
 
-        {/* SVG 배경 애니메이션 */}
-        <div className="pointer-events-none absolute inset-0 w-full h-full">
-          <svg className="w-full h-full" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-
-            {/* 큰 원형 링 — 왼쪽 */}
-            <circle cx="120" cy="200" r="110" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.18" className="spin-slow" style={{transformOrigin: '120px 200px'}} />
-            <circle cx="120" cy="200" r="75" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.2" strokeDasharray="8 6" className="spin-reverse" style={{transformOrigin: '120px 200px'}} />
-
-            {/* 떠다니는 삼각형 */}
-            <polygon points="200,80 230,130 170,130" fill="#fb923c" fillOpacity="0.12" className="float-1" style={{transformOrigin: '200px 105px'}} />
-
-            {/* 떠다니는 다이아몬드 */}
-            <rect x="980" y="60" width="52" height="52" rx="6" fill="#fdba74" fillOpacity="0.15" className="float-2" style={{transform: 'rotate(45deg)', transformOrigin: '1006px 86px'}} />
-
-            {/* 큰 원형 링 — 오른쪽 */}
-            <circle cx="1100" cy="320" r="140" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.14" className="spin-reverse" style={{transformOrigin: '1100px 320px'}} />
-            <circle cx="1100" cy="320" r="95" fill="none" stroke="#f97316" strokeWidth="1" strokeOpacity="0.18" strokeDasharray="5 8" className="spin-slow" style={{transformOrigin: '1100px 320px'}} />
-
-            {/* 육각형 — 오른쪽 위 */}
-            <polygon points="1050,80 1070,60 1090,80 1090,110 1070,130 1050,110" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.25" className="float-3" style={{transformOrigin: '1070px 95px'}} />
-
-            {/* 가운데 아래 큰 원 */}
-            <circle cx="600" cy="640" r="180" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.12" strokeDasharray="10 8" className="spin-slow" style={{transformOrigin: '600px 640px'}} />
-
-            {/* 떠다니는 작은 원들 */}
-            <circle cx="350" cy="120" r="10" fill="#fb923c" fillOpacity="0.18" className="float-2" style={{transformOrigin: '350px 120px'}} />
-            <circle cx="860" cy="160" r="14" fill="#fdba74" fillOpacity="0.2" className="float-1" style={{transformOrigin: '860px 160px'}} />
-            <circle cx="480" cy="580" r="10" fill="#fb923c" fillOpacity="0.15" className="float-3" style={{transformOrigin: '480px 580px'}} />
-            <circle cx="740" cy="560" r="8" fill="#fdba74" fillOpacity="0.18" className="float-2" style={{transformOrigin: '740px 560px'}} />
-
-            {/* 떠다니는 작은 사각형 */}
-            <rect x="60" y="480" width="28" height="28" rx="4" fill="#fb923c" fillOpacity="0.12" className="float-slow" style={{transformOrigin: '74px 494px'}} />
-            <rect x="1120" y="500" width="22" height="22" rx="3" fill="#fdba74" fillOpacity="0.15" className="float-2" style={{transformOrigin: '1131px 511px'}} />
-
-            {/* 곡선 흐름 라인 */}
-            <path d="M0,350 Q300,200 600,360 Q900,520 1200,350" fill="none" stroke="#fb923c" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="12 8">
-              <animate attributeName="stroke-dashoffset" from="200" to="0" dur="6s" repeatCount="indefinite" />
-            </path>
-            <path d="M0,420 Q300,280 600,430 Q900,580 1200,420" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.08" strokeDasharray="10 10">
-              <animate attributeName="stroke-dashoffset" from="200" to="0" dur="9s" repeatCount="indefinite" />
-            </path>
-
-          </svg>
+        {/* MagnetLines 배경 */}
+        <div className="pointer-events-auto absolute inset-0 w-full h-full">
+          <MagnetLines
+            rows={14}
+            columns={22}
+            lineColor="rgba(251,146,60,0.45)"
+            lineWidth="1.5px"
+            lineHeight="36px"
+            baseAngle={-10}
+            style={{ width: '100%', height: '100%' }}
+          />
         </div>
 
         {/* Hero 텍스트 */}
