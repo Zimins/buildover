@@ -158,7 +158,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
             <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-3">About Us</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-5">10년의 신뢰,<br />끊임없는 혁신</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-5">15년의 신뢰,<br />끊임없는 혁신</h2>
             <p className="text-gray-500 leading-8 mb-6">
               2014년 설립 이후 NexusCorp는 국내외 300개 이상의 기업과 파트너십을 맺으며
               기술 혁신의 중심에서 성장해 왔습니다. 우리는 단순한 솔루션 제공을 넘어,
