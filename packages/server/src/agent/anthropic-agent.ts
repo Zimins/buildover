@@ -15,9 +15,15 @@ export class AnthropicAgent extends EventEmitter {
   private projectRoot: string;
   private abortController: AbortController | null = null;
 
-  constructor(projectRoot: string, apiKey: string) {
+  constructor(projectRoot: string, apiKey: string, oauthToken?: string) {
     super();
-    this.client = new Anthropic({ apiKey });
+    if (apiKey) {
+      this.client = new Anthropic({ apiKey });
+    } else if (oauthToken) {
+      this.client = new Anthropic({ authToken: oauthToken });
+    } else {
+      this.client = new Anthropic({ apiKey: '' });
+    }
     this.projectRoot = projectRoot;
   }
 
