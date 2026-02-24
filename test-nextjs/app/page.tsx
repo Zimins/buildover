@@ -126,7 +126,7 @@ export default function Home() {
 
         {/* Hero 텍스트 */}
         <div className="relative z-10">
-          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 선도하는 기업</p>
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 이끌어가는 기업</p>
           <h1 className="text-6xl md:text-8xl font-extrabold leading-tight text-gray-900 mb-6">
             미래를 함께
             <br />
