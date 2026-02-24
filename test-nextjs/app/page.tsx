@@ -278,7 +278,7 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section id="stats" className="py-24 px-6 bg-orange-500 text-white text-center">
+      <section id="stats" className="py-24 px-6 bg-blue-500 text-white text-center">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-4xl font-bold mb-14">숫자로 보는 NexusCorp</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
@@ -290,7 +290,7 @@ export default function Home() {
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="text-5xl font-extrabold mb-2">{stat.value}</div>
-                <div className="text-orange-100 text-sm font-medium">{stat.label}</div>
+                <div className="text-blue-100 text-sm font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
