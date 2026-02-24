@@ -71,7 +71,7 @@ export default function Home() {
             href="#contact"
             className="rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
           >
-            무료 상담
+            유료 상담
           </a>
         </div>
       </header>
