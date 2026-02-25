@@ -96,28 +96,28 @@ export default function Home() {
 
         {/* Hero 텍스트 */}
         <div className="relative z-10">
-          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 이끌어가는 기업</p>
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">Driving Innovation Forward</p>
           <h1 className="text-6xl md:text-8xl font-extrabold leading-tight text-gray-900 mb-6">
-            미래를 함께
+            Building the Future
             <br />
-            <span className="text-orange-500">만들어 갑니다</span>
+            <span className="text-orange-500">Together</span>
           </h1>
           <p className="max-w-xl mx-auto text-lg text-gray-500 mb-10">
-            NexusCorp는 AI·클라우드·디지털 트랜스포메이션 솔루션으로
-            고객의 비즈니스를 한 단계 성장시킵니다.
+            NexusCorp empowers your business with AI, cloud, and digital
+            transformation solutions to reach the next level of growth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="#services"
               className="rounded-full bg-orange-500 px-8 py-3 text-base font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg"
             >
-              서비스 알아보기
+              Explore Services
             </a>
             <a
               href="#contact"
               className="rounded-full border border-orange-300 px-8 py-3 text-base font-semibold text-orange-500 hover:bg-orange-50 transition-colors"
             >
-              문의하기
+              Contact Us
             </a>
           </div>
         </div>
