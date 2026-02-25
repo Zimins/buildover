@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { resolve } from 'path';
 import { BuildOverServer, detectPort, detectFramework } from 'buildover-server';
 import { loadConfig } from '../config.js';
 import { printBanner } from '../banner.js';
@@ -11,6 +12,7 @@ export function createDevCommand(): Command {
     .description('Start BuildOver development server')
     .option('-p, --port <port>', 'BuildOver server port', process.env.PORT || '4100')
     .option('-t, --target <url>', 'Target development server URL')
+    .option('--target-root <path>', 'Root directory of the target app (for worktrees + dev server detection)')
     .option('-s, --serve', 'Start the target dev server automatically', false)
     .option('-o, --open', 'Open browser automatically', false)
     .action(async (options) => {
@@ -48,12 +50,18 @@ export function createDevCommand(): Command {
         // Parse server port
         const serverPort = parseInt(options.port, 10);
 
+        // Resolve target root: explicit flag → cwd
+        const targetRoot = options.targetRoot
+          ? resolve(options.targetRoot)
+          : process.cwd();
+
         // Create and start server
         const server = new BuildOverServer({
           port: serverPort,
           targetUrl,
           apiKey,
           projectRoot: process.cwd(),
+          targetRoot,
         });
 
         await server.start();

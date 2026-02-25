@@ -98,6 +98,44 @@ export class GitManager {
     await this.git.checkout([hash, '--', '.']);
   }
 
+  async push(branchName: string): Promise<void> {
+    await this.git.push('origin', branchName, ['--set-upstream']);
+  }
+
+  async getBranchDiff(branch: string, base: string): Promise<{
+    patch: string;
+    files: Array<{ path: string; insertions: number; deletions: number }>;
+    stats: { filesChanged: number; insertions: number; deletions: number };
+  }> {
+    const range = `${base}...${branch}`;
+    const [patch, diffSummary] = await Promise.all([
+      this.git.diff([range]),
+      this.git.diffSummary([range]),
+    ]);
+    return {
+      patch,
+      files: diffSummary.files.map(f => ({
+        path: f.file,
+        insertions: 'insertions' in f ? f.insertions : 0,
+        deletions: 'deletions' in f ? f.deletions : 0,
+      })),
+      stats: {
+        filesChanged: diffSummary.files.length,
+        insertions: diffSummary.insertions,
+        deletions: diffSummary.deletions,
+      },
+    };
+  }
+
+  async mergeBranch(branchName: string): Promise<{ success: boolean; message: string }> {
+    try {
+      await this.git.merge(['--no-ff', branchName]);
+      return { success: true, message: `Merged ${branchName}` };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }
+
   async getCurrentBranch(): Promise<string> {
     const branch = await this.git.revparse(['--abbrev-ref', 'HEAD']);
     return branch;

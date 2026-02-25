@@ -1,6 +1,15 @@
 import { Transform } from 'stream';
 
-export function createInjectorTransform(): Transform {
+function buildWidgetScript(linkId?: string, explicitSrc?: string, explicitWsUrl?: string, explicitApiBase?: string): string {
+  const src = explicitSrc ?? (linkId ? `/s/${linkId}` : '') + '/buildover/widget.js';
+  let attrs = '';
+  if (linkId) attrs += ` data-buildover-link="${linkId}"`;
+  if (explicitWsUrl) attrs += ` data-buildover-ws="${explicitWsUrl}"`;
+  if (explicitApiBase) attrs += ` data-buildover-api="${explicitApiBase}"`;
+  return `<script src="${src}"${attrs}></script>`;
+}
+
+export function createInjectorTransform(linkId?: string, explicitSrc?: string, explicitWsUrl?: string, explicitApiBase?: string): Transform {
   let buffer = '';
   let injected = false;
 
@@ -9,7 +18,7 @@ export function createInjectorTransform(): Transform {
       buffer += chunk.toString();
 
       if (!injected && buffer.includes('</body>')) {
-        const widgetScript = '<script src="/buildover/widget.js"></script>';
+        const widgetScript = buildWidgetScript(linkId, explicitSrc, explicitWsUrl, explicitApiBase);
         buffer = buffer.replace('</body>', `${widgetScript}\n</body>`);
         injected = true;
 
@@ -31,8 +40,8 @@ export function createInjectorTransform(): Transform {
   });
 }
 
-export function injectWidget(html: string): string {
-  const widgetScript = '<script src="/buildover/widget.js"></script>';
+export function injectWidget(html: string, linkId?: string, explicitSrc?: string, explicitWsUrl?: string, explicitApiBase?: string): string {
+  const widgetScript = buildWidgetScript(linkId, explicitSrc, explicitWsUrl, explicitApiBase);
 
   if (html.includes('</body>')) {
     return html.replace('</body>', `${widgetScript}\n</body>`);

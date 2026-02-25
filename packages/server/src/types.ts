@@ -3,6 +3,8 @@ export interface BuildOverConfig {
   port?: number;
   widgetPath?: string;
   projectRoot?: string;
+  /** Root of the target app (for worktree + dev server). Defaults to projectRoot. */
+  targetRoot?: string;
   apiKey?: string;
 }
 
@@ -33,4 +35,15 @@ export interface FileChange {
   path: string;
   type: 'added' | 'modified' | 'deleted';
   diff?: string;
+}
+
+export interface ShareLink {
+  linkId: string;
+  worktreePath: string;
+  branchName: string;
+  baseBranch: string;
+  devServerPort: number;
+  status: 'creating' | 'ready' | 'stopped' | 'error';
+  createdAt: Date;
+  description?: string;
 }

@@ -2,6 +2,7 @@
 export interface InitMessage {
   type: 'init';
   sessionId: string;
+  linkId?: string;
 }
 
 export interface ChatMessage {
@@ -90,3 +91,14 @@ export interface FileChange {
 }
 
 export type AIStatus = 'idle' | 'analyzing' | 'editing' | 'done';
+
+export interface ShareLinkInfo {
+  linkId: string;
+  branchName: string;
+  baseBranch: string;
+  status: 'creating' | 'ready' | 'stopped' | 'error';
+  createdAt: string;
+  description?: string;
+  url?: string; // server-provided URL (includes proxyPort)
+  mergeStatus?: 'requested' | 'merged' | 'rejected';
+}

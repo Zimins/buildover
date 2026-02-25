@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useRef, useEffect } from 'preact/hooks';
+import { useState, useRef, useEffect, useCallback } from 'preact/hooks';
 import type { AIStatus } from '../types';
 import { useElementPicker } from '../hooks/useElementPicker';
 import { ElementChip } from './ElementChip';
@@ -12,9 +12,13 @@ interface InputBarProps {
   status?: AIStatus;
   statusMessage?: string;
   showStatus?: boolean;
+  onCreateLink?: () => Promise<string>;
 }
 
-export function InputBar({ onSend, onClear, disabled, status, statusMessage, showStatus }: InputBarProps) {
+export function InputBar({ onSend, onClear, disabled, status, statusMessage, showStatus, onCreateLink }: InputBarProps) {
+  const [linkCreating, setLinkCreating] = useState(false);
+  const [createdUrl, setCreatedUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState('');
   const [selectedElement, setSelectedElement] = useState<SelectorResult | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -45,6 +49,26 @@ export function InputBar({ onSend, onClear, disabled, status, statusMessage, sho
       handleSubmit();
     }
   };
+
+  const handleCreateLink = useCallback(async () => {
+    if (!onCreateLink || linkCreating) return;
+    setLinkCreating(true);
+    setCreatedUrl(null);
+    try {
+      const url = await onCreateLink();
+      setCreatedUrl(url);
+    } finally {
+      setLinkCreating(false);
+    }
+  }, [onCreateLink, linkCreating]);
+
+  const handleCopy = useCallback(() => {
+    if (!createdUrl) return;
+    navigator.clipboard.writeText(createdUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [createdUrl]);
 
   const handlePickerToggle = () => {
     if (isActive) {
@@ -88,6 +112,19 @@ export function InputBar({ onSend, onClear, disabled, status, statusMessage, sho
           rows={4}
         />
       </div>
+      {createdUrl && (
+        <div className="buildover-share-result">
+          <a href={createdUrl} target="_blank" rel="noopener noreferrer" className="buildover-share-url">
+            {createdUrl}
+          </a>
+          <button className="buildover-copy-btn" onClick={handleCopy} title="URL 복사">
+            {copied ? '✓' : '복사'}
+          </button>
+          <button className="buildover-share-close" onClick={() => setCreatedUrl(null)} title="닫기">
+            ✕
+          </button>
+        </div>
+      )}
       <div className="buildover-input-footer">
         <div className="buildover-input-footer-left">
           <button
@@ -107,6 +144,17 @@ export function InputBar({ onSend, onClear, disabled, status, statusMessage, sho
           >
             ⊕
           </button>
+          {onCreateLink && (
+            <button
+              className="buildover-share-btn"
+              onClick={handleCreateLink}
+              disabled={linkCreating}
+              title="새 공유 링크 만들기 (독립된 서브 서버)"
+              type="button"
+            >
+              {linkCreating ? '생성 중...' : '🔗 링크'}
+            </button>
+          )}
         </div>
         <button
           className="buildover-send-btn"

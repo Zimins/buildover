@@ -22,9 +22,12 @@ function getOrCreateSessionId(): string {
 
 interface AppProps {
   wsUrl?: string;
+  linkId?: string;
+  basePath?: string;
+  apiBase?: string;
 }
 
-export function App({ wsUrl }: AppProps) {
+export function App({ wsUrl, linkId, basePath, apiBase: explicitApiBase }: AppProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [fileChanges, setFileChanges] = useState<FileChange[]>([]);
@@ -35,9 +38,15 @@ export function App({ wsUrl }: AppProps) {
   const wsRef = useRef<WebSocketClient | null>(null);
   const streamBufferRef = useRef<{ [messageId: string]: string }>({});
 
-  const apiBase = wsUrl
-    ? wsUrl.replace(/^ws/, 'http').replace(/\/buildover\/ws$/, '')
-    : '';
+  const [mergeRequested, setMergeRequested] = useState(false);
+  const [prLoading, setPrLoading] = useState(false);
+
+  const apiBase = explicitApiBase
+    || (basePath
+      ? `${window.location.protocol}//${window.location.host}${basePath}`
+      : wsUrl
+      ? wsUrl.replace(/^ws/, 'http').replace(/\/buildover\/ws$/, '')
+      : '');
 
   useEffect(() => {
     if (!wsUrl) {
@@ -183,6 +192,35 @@ export function App({ wsUrl }: AppProps) {
     wsRef.current?.send({ type: 'clear' });
   }, []);
 
+  const handleCreateLink = useCallback(async (): Promise<string> => {
+    const res = await fetch(`${apiBase}/buildover/api/share/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!data.url) throw new Error(data.error || 'Failed to create link');
+    return data.url as string;
+  }, [apiBase]);
+
+  const handleCreatePR = useCallback(async () => {
+    if (!linkId || !apiBase) return;
+    setPrLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/buildover/api/share/pr`, { method: 'POST' });
+      const data = await res.json();
+      if (data.mergeStatus === 'requested') {
+        setMergeRequested(true);
+      } else {
+        logWarn('Merge request failed:', data.error);
+      }
+    } catch (err) {
+      logWarn('Merge request error:', err);
+    } finally {
+      setPrLoading(false);
+    }
+  }, [linkId, apiBase]);
+
   return (
     <div className="buildover-container">
       <HistorySidebar
@@ -190,6 +228,7 @@ export function App({ wsUrl }: AppProps) {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen((prev) => !prev)}
         apiBase={apiBase}
+        isShareUser={!!linkId}
       />
       <FAB onClick={() => setIsOpen((prev) => !prev)} isOpen={isOpen} />
       <ChatPanel
@@ -201,6 +240,8 @@ export function App({ wsUrl }: AppProps) {
         statusMessage={statusMessage}
         onSend={handleSend}
         onClear={handleClear}
+        prButton={linkId ? { loading: prLoading, requested: mergeRequested, onClick: handleCreatePR } : undefined}
+        onCreateLink={!linkId ? handleCreateLink : undefined}
       />
     </div>
   );

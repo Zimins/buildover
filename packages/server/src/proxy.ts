@@ -2,7 +2,7 @@ import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middlewar
 import type { Request, Response } from 'express';
 import { injectWidget } from './inject.js';
 
-export function createProxy(targetUrl: string) {
+export function createProxy(targetUrl: string, linkId?: string, explicitWidgetSrc?: string, explicitWsUrl?: string, explicitApiBase?: string) {
   return createProxyMiddleware({
     target: targetUrl,
     changeOrigin: true,
@@ -13,7 +13,7 @@ export function createProxy(targetUrl: string) {
 
       if (contentType.includes('text/html')) {
         const html = responseBuffer.toString('utf8');
-        return injectWidget(html);
+        return injectWidget(html, linkId, explicitWidgetSrc, explicitWsUrl, explicitApiBase);
       }
 
       return responseBuffer;
