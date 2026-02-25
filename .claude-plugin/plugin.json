@@ -1,0 +1,11 @@
+{
+  "name": "buildover",
+  "description": "AI-powered dev tool that wraps any web app with a floating chat widget via reverse proxy. Lets you ask Claude to modify source files in real-time with HMR.",
+  "version": "0.0.3",
+  "author": {
+    "name": "Zimins"
+  },
+  "homepage": "https://github.com/Zimins/buildover",
+  "repository": "https://github.com/Zimins/buildover",
+  "license": "MIT"
+}
