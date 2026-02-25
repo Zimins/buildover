@@ -23,13 +23,13 @@ pnpm --filter buildover-widget dev
 pnpm --filter buildover lint
 
 # Run the tool locally (after building)
-cd test-nextjs && pnpm dev             # Terminal 1: start target app on :3000
-node packages/cli/dist/index.js dev --target 3000  # Terminal 2: start BuildOver on :4100
+cd test-nextjs && pnpm dev             # Terminal 1: start target app on :10000
+node packages/cli/dist/index.js dev --target 10000  # Terminal 2: start BuildOver on :10001
 ```
 
 ## Architecture
 
-BuildOver is an **AI-powered dev tool** that wraps any running web app with a chat widget. It works as a reverse proxy — you visit `localhost:4100` instead of `localhost:3000`, and a floating chat panel lets you ask Claude to modify your source files in real-time with HMR.
+BuildOver is an **AI-powered dev tool** that wraps any running web app with a chat widget. It works as a reverse proxy — you visit `localhost:10001` instead of `localhost:10000`, and a floating chat panel lets you ask Claude to modify your source files in real-time with HMR.
 
 ### Package Dependency Chain
 
@@ -44,11 +44,11 @@ All packages are TypeScript + tsup. The build order matters: widget → server �
 ### Request Flow
 
 ```
-Browser (:4100) → Express server
+Browser (:10001) → Express server
   ├─ GET /buildover/widget.js   → serves dist/widget.js (IIFE bundle with inlined CSS)
   ├─ /buildover/ws              → WebSocket (chat communication)
   ├─ /buildover/api/*           → REST API (sessions, diff, branches)
-  └─ everything else            → http-proxy-middleware → target app (:3000)
+  └─ everything else            → http-proxy-middleware → target app (:10000)
                                    HTML responses get <script src="/buildover/widget.js">
                                    injected before </body>
 ```

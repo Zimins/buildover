@@ -249,7 +249,8 @@ export class BuildOverServer {
     if (!agent) {
       console.log(chalk.blue(`[Chat] Creating new AnthropicAgent for session: ${sessionId}`));
       const apiKey = this.config.apiKey || process.env.ANTHROPIC_API_KEY || '';
-      agent = new AnthropicAgent(this.config.projectRoot, apiKey);
+      const oauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN || '';
+      agent = new AnthropicAgent(this.config.projectRoot, apiKey, oauthToken);
 
       agent.on('response', async (response: AgentResponse) => {
         const ctx = this.sessionContexts.get(sessionId) || { messageId, content };

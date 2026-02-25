@@ -1,5 +1,7 @@
 'use client';
 
+import MagnetLines from './components/MagnetLines';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-800">
@@ -46,17 +48,8 @@ export default function Home() {
           0%, 100% { opacity: 0.5; r: 5; }
           50% { opacity: 1; r: 8; }
         }
-        @keyframes bouncy {
-          0%, 100% { transform: translateY(0px) scaleY(1); }
-          30% { transform: translateY(-18px) scaleY(1.08); }
-          50% { transform: translateY(-22px) scaleY(1.05); }
-          70% { transform: translateY(-6px) scaleY(0.96); }
-          85% { transform: translateY(-12px) scaleY(1.02); }
-          95% { transform: translateY(-2px) scaleY(0.99); }
-        }
         .bounce-char {
           display: inline-block;
-          animation: bouncy 1.4s ease-in-out infinite;
         }
         .float-1 { animation: float1 5s ease-in-out infinite; }
         .float-2 { animation: float2 6.5s ease-in-out infinite; }
@@ -88,72 +81,26 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-40 pb-28 px-6 bg-gradient-to-br from-orange-50 via-white to-amber-50 text-center">
 
-        {/* SVG 배경 애니메이션 */}
-        <div className="pointer-events-none absolute inset-0 w-full h-full">
-          <svg className="w-full h-full" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-
-            {/* 큰 원형 링 — 왼쪽 */}
-            <circle cx="120" cy="200" r="110" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.18" className="spin-slow" style={{transformOrigin: '120px 200px'}} />
-            <circle cx="120" cy="200" r="75" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.2" strokeDasharray="8 6" className="spin-reverse" style={{transformOrigin: '120px 200px'}} />
-
-            {/* 떠다니는 삼각형 */}
-            <polygon points="200,80 230,130 170,130" fill="#fb923c" fillOpacity="0.12" className="float-1" style={{transformOrigin: '200px 105px'}} />
-
-            {/* 떠다니는 다이아몬드 */}
-            <rect x="980" y="60" width="52" height="52" rx="6" fill="#fdba74" fillOpacity="0.15" className="float-2" style={{transform: 'rotate(45deg)', transformOrigin: '1006px 86px'}} />
-
-            {/* 큰 원형 링 — 오른쪽 */}
-            <circle cx="1100" cy="320" r="140" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.14" className="spin-reverse" style={{transformOrigin: '1100px 320px'}} />
-            <circle cx="1100" cy="320" r="95" fill="none" stroke="#f97316" strokeWidth="1" strokeOpacity="0.18" strokeDasharray="5 8" className="spin-slow" style={{transformOrigin: '1100px 320px'}} />
-
-            {/* 육각형 — 오른쪽 위 */}
-            <polygon points="1050,80 1070,60 1090,80 1090,110 1070,130 1050,110" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeOpacity="0.25" className="float-3" style={{transformOrigin: '1070px 95px'}} />
-
-            {/* 가운데 아래 큰 원 */}
-            <circle cx="600" cy="640" r="180" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.12" strokeDasharray="10 8" className="spin-slow" style={{transformOrigin: '600px 640px'}} />
-
-            {/* 떠다니는 작은 원들 */}
-            <circle cx="350" cy="120" r="10" fill="#fb923c" fillOpacity="0.18" className="float-2" style={{transformOrigin: '350px 120px'}} />
-            <circle cx="860" cy="160" r="14" fill="#fdba74" fillOpacity="0.2" className="float-1" style={{transformOrigin: '860px 160px'}} />
-            <circle cx="480" cy="580" r="10" fill="#fb923c" fillOpacity="0.15" className="float-3" style={{transformOrigin: '480px 580px'}} />
-            <circle cx="740" cy="560" r="8" fill="#fdba74" fillOpacity="0.18" className="float-2" style={{transformOrigin: '740px 560px'}} />
-
-            {/* 떠다니는 작은 사각형 */}
-            <rect x="60" y="480" width="28" height="28" rx="4" fill="#fb923c" fillOpacity="0.12" className="float-slow" style={{transformOrigin: '74px 494px'}} />
-            <rect x="1120" y="500" width="22" height="22" rx="3" fill="#fdba74" fillOpacity="0.15" className="float-2" style={{transformOrigin: '1131px 511px'}} />
-
-            {/* 곡선 흐름 라인 */}
-            <path d="M0,350 Q300,200 600,360 Q900,520 1200,350" fill="none" stroke="#fb923c" strokeWidth="1" strokeOpacity="0.1" strokeDasharray="12 8">
-              <animate attributeName="stroke-dashoffset" from="200" to="0" dur="6s" repeatCount="indefinite" />
-            </path>
-            <path d="M0,420 Q300,280 600,430 Q900,580 1200,420" fill="none" stroke="#fdba74" strokeWidth="1" strokeOpacity="0.08" strokeDasharray="10 10">
-              <animate attributeName="stroke-dashoffset" from="200" to="0" dur="9s" repeatCount="indefinite" />
-            </path>
-
-          </svg>
+        {/* MagnetLines 배경 */}
+        <div className="pointer-events-auto absolute inset-0 w-full h-full">
+          <MagnetLines
+            rows={14}
+            columns={22}
+            lineColor="rgba(251,146,60,0.45)"
+            lineWidth="1.5px"
+            lineHeight="36px"
+            baseAngle={-10}
+            style={{ width: '100%', height: '100%' }}
+          />
         </div>
 
         {/* Hero 텍스트 */}
         <div className="relative z-10">
-          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 선도하는 기업</p>
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900 mb-6">
-            {'미래를 함께'.split('').map((char, i) => (
-              <span
-                key={i}
-                className="bounce-char"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              >{char === ' ' ? '\u00A0' : char}</span>
-            ))}
+          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">혁신을 이끌어가는 기업</p>
+          <h1 className="text-6xl md:text-8xl font-extrabold leading-tight text-gray-900 mb-6">
+            미래를 함께
             <br />
-            <span className="text-orange-500">
-              {'만들어 갑니다'.split('').map((char, i) => (
-                <span
-                  key={i}
-                  className="bounce-char"
-                  style={{ animationDelay: `${(i + 6) * 0.08}s` }}
-                >{char === ' ' ? '\u00A0' : char}</span>
-              ))}
-            </span>
+            <span className="text-orange-500">만들어 갑니다</span>
           </h1>
           <p className="max-w-xl mx-auto text-lg text-gray-500 mb-10">
             NexusCorp는 AI·클라우드·디지털 트랜스포메이션 솔루션으로
@@ -181,7 +128,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
             <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-3">About Us</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-5">10년의 신뢰,<br />끊임없는 혁신</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-5">15년의 신뢰,<br />끊임없는 혁신</h2>
             <p className="text-gray-500 leading-8 mb-6">
               2014년 설립 이후 NexusCorp는 국내외 300개 이상의 기업과 파트너십을 맺으며
               기술 혁신의 중심에서 성장해 왔습니다. 우리는 단순한 솔루션 제공을 넘어,
@@ -301,7 +248,7 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section id="stats" className="py-24 px-6 bg-orange-500 text-white text-center">
+      <section id="stats" className="py-24 px-6 bg-blue-500 text-white text-center">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-4xl font-bold mb-14">숫자로 보는 NexusCorp</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
@@ -313,7 +260,7 @@ export default function Home() {
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="text-5xl font-extrabold mb-2">{stat.value}</div>
-                <div className="text-orange-100 text-sm font-medium">{stat.label}</div>
+                <div className="text-blue-100 text-sm font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
