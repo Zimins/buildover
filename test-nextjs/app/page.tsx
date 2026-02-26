@@ -63,7 +63,7 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <span className="text-2xl font-bold tracking-tight text-orange-500">Nexus<span className="text-gray-800">Corp</span></span>
-          <nav className="hidden md:flex gap-8 text-sm font-medium text-gray-600">
+          <nav className="hidden md:flex gap-8 text-[25px] font-medium text-gray-600">
             <a href="#about" className="hover:text-orange-500 transition-colors">회사 소개</a>
             <a href="#services" className="hover:text-orange-500 transition-colors">서비스</a>
             <a href="#stats" className="hover:text-orange-500 transition-colors">실적</a>
@@ -71,7 +71,7 @@ export default function Home() {
           </nav>
           <a
             href="#contact"
-            className="rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+            className="rounded-full bg-orange-500 px-5 py-2 text-[25px] font-semibold text-white hover:bg-orange-600 transition-colors"
           >
             무료 상담
           </a>
@@ -96,13 +96,13 @@ export default function Home() {
 
         {/* Hero 텍스트 */}
         <div className="relative z-10">
-          <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-4">Driving Innovation Forward</p>
-          <h1 className="text-6xl md:text-8xl font-extrabold leading-tight text-gray-900 mb-6">
+          <p className="text-[25px] font-semibold text-orange-500 uppercase tracking-widest mb-4">Driving Innovation Forward</p>
+          <h1 className="text-[83px] md:text-8xl font-extrabold leading-tight text-[#ff0000] mb-6">
             Building the Future
             <br />
             <span className="text-orange-500">Together</span>
           </h1>
-          <p className="max-w-xl mx-auto text-lg text-gray-500 mb-10">
+          <p className="max-w-xl mx-auto text-[25px] text-gray-500 mb-10">
             NexusCorp empowers your business with AI, cloud, and digital
             transformation solutions to reach the next level of growth.
           </p>
@@ -127,14 +127,14 @@ export default function Home() {
       <section id="about" className="py-24 px-6 max-w-6xl mx-auto">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-3">About Us</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-5">15년의 신뢰,<br />끊임없는 혁신</h2>
+            <p className="text-[25px] font-semibold text-orange-500 uppercase tracking-widest mb-3">About Us</p>
+            <h2 className="text-4xl font-bold text-[#ff0000] mb-5">15년의 신뢰,<br />끊임없는 혁신</h2>
             <p className="text-gray-500 leading-8 mb-6">
               2014년 설립 이후 NexusCorp는 국내외 300개 이상의 기업과 파트너십을 맺으며
               기술 혁신의 중심에서 성장해 왔습니다. 우리는 단순한 솔루션 제공을 넘어,
               고객의 비즈니스 목표를 함께 설계하고 실현합니다.
             </p>
-            <ul className="space-y-3 text-gray-600 text-sm">
+            <ul className="space-y-3 text-gray-600 text-[25px]">
               {["고객 중심의 맞춤형 솔루션", "글로벌 수준의 기술력", "24/7 전담 지원 체계"].map((item) => (
                 <li key={item} className="flex items-center gap-3">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center text-xs font-bold">✓</span>
@@ -225,8 +225,8 @@ export default function Home() {
       <section id="services" className="py-24 px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-3">Services</p>
-            <h2 className="text-4xl font-bold text-gray-900">핵심 서비스</h2>
+            <p className="text-[25px] font-semibold text-orange-500 uppercase tracking-widest mb-3">Services</p>
+            <h2 className="text-4xl font-bold text-[#ff0000]">핵심 서비스</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -239,8 +239,8 @@ export default function Home() {
             ].map((service) => (
               <div key={service.title} className="rounded-2xl bg-white p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
                 <div className="text-4xl mb-4">{service.icon}</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{service.title}</h3>
-                <p className="text-sm text-gray-500 leading-7">{service.desc}</p>
+                <h3 className="text-[25px] font-bold text-[#ff0000] mb-2">{service.title}</h3>
+                <p className="text-[25px] text-gray-500 leading-7">{service.desc}</p>
               </div>
             ))}
           </div>
@@ -260,7 +260,7 @@ export default function Home() {
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="text-5xl font-extrabold mb-2">{stat.value}</div>
-                <div className="text-blue-100 text-sm font-medium">{stat.label}</div>
+                <div className="text-blue-100 text-[25px] font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -269,27 +269,27 @@ export default function Home() {
 
       {/* Contact Section */}
       <section id="contact" className="py-24 px-6 max-w-2xl mx-auto text-center">
-        <p className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-3">Contact</p>
-        <h2 className="text-4xl font-bold text-gray-900 mb-4">함께 시작해볼까요?</h2>
+        <p className="text-[25px] font-semibold text-orange-500 uppercase tracking-widest mb-3">Contact</p>
+        <h2 className="text-4xl font-bold text-[#ff0000] mb-4">함께 시작해볼까요?</h2>
         <p className="text-gray-500 mb-10">
           프로젝트 문의, 파트너십, 채용 등 어떤 것이든 편하게 연락 주세요.
         </p>
         <form className="flex flex-col gap-4 text-left" onSubmit={(e) => { e.preventDefault(); alert('문의가 접수되었습니다! 빠르게 연락 드리겠습니다 😊'); }}>
           <input type="text" placeholder="이름" required
-            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-[25px] focus:outline-none focus:ring-2 focus:ring-orange-400" />
           <input type="email" placeholder="이메일" required
-            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-[25px] focus:outline-none focus:ring-2 focus:ring-orange-400" />
           <textarea placeholder="문의 내용" rows={4} required
-            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+            className="w-full rounded-xl border border-gray-200 px-5 py-3 text-[25px] focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
           <button type="submit"
-            className="w-full rounded-full bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg">
+            className="w-full rounded-full bg-orange-500 py-3 text-[25px] font-semibold text-white hover:bg-orange-600 transition-colors shadow-lg">
             문의 보내기
           </button>
         </form>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-10 px-6 text-center text-sm text-gray-400">
+      <footer className="border-t border-gray-100 py-10 px-6 text-center text-[25px] text-gray-400">
         <p className="font-semibold text-orange-500 mb-1">NexusCorp</p>
         <p>서울특별시 강남구 테헤란로 123 넥서스빌딩 15F</p>
         <p className="mt-1">contact@nexuscorp.kr · 02-1234-5678</p>

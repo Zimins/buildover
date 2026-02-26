@@ -13,9 +13,11 @@ interface InputBarProps {
   statusMessage?: string;
   showStatus?: boolean;
   onCreateLink?: () => Promise<string>;
+  designMode?: boolean;
+  onDesignModeToggle?: () => void;
 }
 
-export function InputBar({ onSend, onClear, disabled, status, statusMessage, showStatus, onCreateLink }: InputBarProps) {
+export function InputBar({ onSend, onClear, disabled, status, statusMessage, showStatus, onCreateLink, designMode, onDesignModeToggle }: InputBarProps) {
   const [linkCreating, setLinkCreating] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -144,6 +146,17 @@ export function InputBar({ onSend, onClear, disabled, status, statusMessage, sho
           >
             ⊕
           </button>
+          {onDesignModeToggle && (
+            <button
+              className={`buildover-design-toggle-btn${designMode ? ' active' : ''}`}
+              onClick={onDesignModeToggle}
+              disabled={disabled}
+              title={designMode ? 'Exit design mode' : 'Design mode'}
+              type="button"
+            >
+              Design
+            </button>
+          )}
           {onCreateLink && (
             <button
               className="buildover-share-btn"

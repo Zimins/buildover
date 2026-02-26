@@ -1,10 +1,13 @@
 import { h } from 'preact';
-import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'preact/hooks';
 import { FAB } from './FAB';
 import { ChatPanel } from './ChatPanel';
 import { HistorySidebar } from './HistorySidebar';
+import { DesignSidebar } from './DesignSidebar';
 import { WebSocketClient } from '../ws/client';
-import type { Message, FileChange, AIStatus, ServerMessage, CommitEntry } from '../types';
+import { useDesignPicker } from '../hooks/useDesignPicker';
+import { debounce } from '../utils/debounce';
+import type { Message, FileChange, AIStatus, ServerMessage, CommitEntry, DesignElementInfo } from '../types';
 
 const log = (msg: string, ...args: any[]) => console.log(`[BuildOver] ${msg}`, ...args);
 const logWarn = (msg: string, ...args: any[]) => console.warn(`[BuildOver] ${msg}`, ...args);
@@ -40,6 +43,9 @@ export function App({ wsUrl, linkId, basePath, apiBase: explicitApiBase }: AppPr
 
   const [mergeRequested, setMergeRequested] = useState(false);
   const [prLoading, setPrLoading] = useState(false);
+  const [designMode, setDesignMode] = useState(false);
+  const [selectedDesignElement, setSelectedDesignElement] = useState<DesignElementInfo | null>(null);
+  const inlineOverridesRef = useRef<Map<string, Set<string>>>(new Map());
 
   const apiBase = explicitApiBase
     || (basePath
@@ -47,6 +53,79 @@ export function App({ wsUrl, linkId, basePath, apiBase: explicitApiBase }: AppPr
       : wsUrl
       ? wsUrl.replace(/^ws/, 'http').replace(/\/buildover\/ws$/, '')
       : '');
+
+  const { isActive: designPickerActive, activate: activateDesignPicker, deactivate: deactivateDesignPicker } = useDesignPicker({
+    onSelect: (info) => {
+      setSelectedDesignElement(info);
+    },
+  });
+
+  // Toggle design mode
+  const handleDesignModeToggle = useCallback(() => {
+    if (!designMode) {
+      setDesignMode(true);
+      activateDesignPicker();
+    } else {
+      deactivateDesignPicker();
+      setSelectedDesignElement(null);
+      setDesignMode(false);
+    }
+  }, [designMode, activateDesignPicker, deactivateDesignPicker]);
+
+  // Debounced sender for design changes
+  const debouncedSendDesignChange = useMemo(() => debounce((
+    selector: string,
+    property: string,
+    value: string,
+    oldValue: string,
+    elementInfo: DesignElementInfo,
+  ) => {
+    wsRef.current?.send({
+      type: 'design.change',
+      selector,
+      property,
+      value,
+      oldValue,
+      elementInfo: {
+        tagName: elementInfo.tagName,
+        classes: elementInfo.classes,
+        id: elementInfo.id,
+        textContent: elementInfo.textContent,
+        computedStyles: elementInfo.computedStyles,
+      },
+    });
+  }, 800), []);
+
+  const handleDesignPropertyChange = useCallback((property: string, value: string) => {
+    if (!selectedDesignElement) return;
+    const { selector } = selectedDesignElement;
+    const oldValue = selectedDesignElement.computedStyles[
+      property.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+    ] || '';
+
+    // 1. Immediate visual feedback via inline style
+    try {
+      const el = document.querySelector(selector);
+      if (el instanceof HTMLElement) {
+        el.style.setProperty(property, value);
+        // Track inline override
+        if (!inlineOverridesRef.current.has(selector)) {
+          inlineOverridesRef.current.set(selector, new Set());
+        }
+        inlineOverridesRef.current.get(selector)!.add(property);
+      }
+    } catch { /* selector may fail */ }
+
+    // 2. Update local state so sidebar stays in sync
+    const camelProp = property.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+    setSelectedDesignElement(prev => prev ? {
+      ...prev,
+      computedStyles: { ...prev.computedStyles, [camelProp]: value },
+    } : null);
+
+    // 3. Debounced WebSocket send
+    debouncedSendDesignChange(selector, property, value, oldValue, selectedDesignElement);
+  }, [selectedDesignElement, debouncedSendDesignChange]);
 
   useEffect(() => {
     if (!wsUrl) {
@@ -132,6 +211,16 @@ export function App({ wsUrl, linkId, basePath, apiBase: explicitApiBase }: AppPr
           ...prev,
           { path: message.path, additions: message.additions, deletions: message.deletions, diff: message.diff },
         ]);
+        // Clear inline overrides (HMR will apply the real source change)
+        for (const [sel, props] of inlineOverridesRef.current.entries()) {
+          try {
+            const el = document.querySelector(sel);
+            if (el instanceof HTMLElement) {
+              for (const p of props) el.style.removeProperty(p);
+            }
+          } catch { /* ignore */ }
+        }
+        inlineOverridesRef.current.clear();
         break;
       }
 
@@ -242,6 +331,14 @@ export function App({ wsUrl, linkId, basePath, apiBase: explicitApiBase }: AppPr
         onClear={handleClear}
         prButton={linkId ? { loading: prLoading, requested: mergeRequested, onClick: handleCreatePR } : undefined}
         onCreateLink={!linkId ? handleCreateLink : undefined}
+        designMode={designMode}
+        onDesignModeToggle={handleDesignModeToggle}
+      />
+      <DesignSidebar
+        isOpen={designMode}
+        element={selectedDesignElement}
+        onPropertyChange={handleDesignPropertyChange}
+        onClose={handleDesignModeToggle}
       />
     </div>
   );

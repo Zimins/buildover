@@ -40,6 +40,7 @@ export default defineConfig({
       .replace(/\\/g, '\\\\')
       .replace(/`/g, '\\`')
       .replace(/\$/g, '\\$')
+      .replace(/"/g, '\\"')
       .replace(/\n/g, '\\n')
       .replace(/\r/g, '\\r');
     js = js.replace('__CSS_PLACEHOLDER__', escapedCss);

@@ -22,6 +22,8 @@ interface ChatPanelProps {
   onClear: () => void;
   prButton?: PRButtonProps;
   onCreateLink?: () => Promise<string>;
+  designMode?: boolean;
+  onDesignModeToggle?: () => void;
 }
 
 export function ChatPanel({
@@ -35,6 +37,8 @@ export function ChatPanel({
   onClear,
   prButton,
   onCreateLink,
+  designMode,
+  onDesignModeToggle,
 }: ChatPanelProps) {
   const [showHistory, setShowHistory] = useState(false);
 
@@ -65,6 +69,8 @@ export function ChatPanel({
         statusMessage={statusMessage}
         showStatus={!showHistory}
         onCreateLink={onCreateLink}
+        designMode={designMode}
+        onDesignModeToggle={onDesignModeToggle}
       />
     </div>
   );

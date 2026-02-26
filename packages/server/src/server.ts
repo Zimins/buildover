@@ -13,6 +13,7 @@ import { GitManager } from './git/manager.js';
 import { AnthropicAgent } from './agent/anthropic-agent.js';
 import { WorktreeManager } from './worktree/manager.js';
 import type { ShareLink } from './worktree/manager.js';
+import { StyleFinder } from './design/style-finder.js';
 
 
 function buildLoadingPage(statusUrl: string): string {
@@ -108,6 +109,7 @@ export class BuildOverServer {
   private gitManager: GitManager;
   private worktreeManager: WorktreeManager;
   private agents: Map<string, AnthropicAgent> = new Map();
+  private styleFinder = new StyleFinder();
   private sessionContexts: Map<string, { messageId: string; content: string }> = new Map();
   private sessionWebSockets: Map<string, WebSocket> = new Map();
   private linkContexts: Map<string, LinkContext> = new Map();
@@ -600,6 +602,49 @@ export class BuildOverServer {
               sessionContexts: ctx.sessionContexts,
               sendToSession: (d) => this.wsSend(ws, d),
             });
+          } else if (message.type === 'design.change') {
+            console.log(chalk.green(`[Design] Change: ${message.property} → ${message.value}`));
+            const sendToSession = (d: object) => this.wsSend(ws, d);
+            sendToSession({ type: 'status', status: 'editing', message: 'Updating style...' });
+
+            try {
+              const result = await this.styleFinder.findAndReplace({
+                classes: message.elementInfo?.classes || [],
+                id: message.elementInfo?.id || '',
+                property: message.property,
+                oldValue: message.oldValue,
+                newValue: message.value,
+                projectRoot: ctx.projectRoot,
+              });
+
+              if (result.success) {
+                console.log(chalk.green(`[Design] Direct edit: ${result.strategy} → ${result.filePath}`));
+                sendToSession({ type: 'file.changed', path: result.filePath, additions: 0, deletions: 0 });
+                sendToSession({ type: 'status', status: 'done', message: 'Done' });
+
+                // Auto-commit
+                try {
+                  const commitMsg = `design: ${message.property} → ${message.value}`;
+                  const hash = await ctx.gitManager.autoCommit(commitMsg);
+                  if (hash) {
+                    const history = await ctx.gitManager.getCommitHistory(1);
+                    if (history.length > 0) {
+                      sendToSession({ type: 'commit.created', commit: history[0] });
+                    }
+                  }
+                } catch (err: any) {
+                  console.warn(chalk.yellow(`[Design] Auto-commit skipped: ${err.message}`));
+                }
+              } else {
+                console.log(chalk.yellow(`[Design] StyleFinder failed: ${result.error || 'not found'}`));
+                sendToSession({ type: 'error', message: `Could not find style definition for ${message.property} in source code.` });
+                sendToSession({ type: 'status', status: 'idle' });
+              }
+            } catch (err: any) {
+              console.error(chalk.red(`[Design] Error:`), err.message);
+              sendToSession({ type: 'error', message: `Design change failed: ${err.message}` });
+              sendToSession({ type: 'status', status: 'idle' });
+            }
           } else if (message.type === 'clear') {
             if (sessionId) {
               const ctx2 = getContext();

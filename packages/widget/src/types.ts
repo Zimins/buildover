@@ -15,7 +15,31 @@ export interface ClearMessage {
   type: 'clear';
 }
 
-export type ClientMessage = InitMessage | ChatMessage | ClearMessage;
+export interface DesignElementInfo {
+  selector: string;
+  tagName: string;
+  textContent: string;
+  classes: string[];
+  id: string;
+  computedStyles: Record<string, string>;
+}
+
+export interface DesignChangeMessage {
+  type: 'design.change';
+  selector: string;
+  property: string;
+  value: string;
+  oldValue: string;
+  elementInfo: {
+    tagName: string;
+    classes: string[];
+    id: string;
+    textContent: string;
+    computedStyles: Record<string, string>;
+  };
+}
+
+export type ClientMessage = InitMessage | ChatMessage | ClearMessage | DesignChangeMessage;
 
 // Server-to-Client messages
 export interface StreamMessage {
